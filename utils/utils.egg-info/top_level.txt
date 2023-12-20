@@ -1,0 +1,12 @@
+advertisements
+bookmarks
+bot
+chatgpt
+database
+gdz
+middleware
+ocr
+payments
+pro
+share
+users

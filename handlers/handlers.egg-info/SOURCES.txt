@@ -1,0 +1,5 @@
+setup.py
+handlers.egg-info/PKG-INFO
+handlers.egg-info/SOURCES.txt
+handlers.egg-info/dependency_links.txt
+handlers.egg-info/top_level.txt

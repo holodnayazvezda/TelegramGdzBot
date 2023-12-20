@@ -1,0 +1,1 @@
+__all__ = ('bookmarks_worker')
