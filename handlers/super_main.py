@@ -1,18 +1,12 @@
-# импорты из файлов
+# импорты из пакетов
 from utils.advertisements.ads_database_worker import create_ads, change_ads_status, get_ads_data
 from utils.advertisements.ads_status_to_text import ads_status_to_text, status_code_to_menu_text
-from utils.async_process_runner import start as async_functions_process_starter
-from utils.chatgpt.audio_to_text import audio_to_text
 from utils.bot.basic_prints import *
 from utils.bot.bot_token_worker import check_bot_token, get_bot_info
 from utils.bot.bots_worker import update_or_create_bot_data, get_working_bots_tokens, delete_bot, isworking, start_or_stop_bot, \
     get_all_bots_tokens
-from utils.chatgpt.chat_gpt_worker import ask_chat_gpt_and_return_answer
-from utils.coder_and_decoder import decode_and_write
 from data.config import (get_buttons_list_for_user, get_reply_markup_for_user, MAIN_COMMANDS,
-                    get_available_amount_of_bookmarks, PRICES_FOR_ADS, PRICE_FOR_WATCH, PRICES_FOR_PREMIUM,
-                    get_max_tokens_in_response_for_user, get_available_amount_of_requests_to_chat_gpt)
-from utils.database.database_worker import get_information_from
+                         get_available_amount_of_bookmarks, PRICES_FOR_ADS, PRICE_FOR_WATCH, PRICES_FOR_PREMIUM)
 from utils.advertisements.get_ads_orders_by_status_code import get_ads_orders_by_status_code
 from utils.aiogram_functions_worker import *
 from utils.payments.payment_database_worker import *
@@ -22,13 +16,9 @@ from utils.database.rebooter import reboot_daily_users
 from utils.string_validator import string_validator, contains_only_allowed_chars
 from utils.users.users import active_now
 from utils.text_worker import *
-from utils.gdz.megaresheba_worker import get_solution_by_link_at_number
 from utils.middleware.throttling_middleware import ThrottlingMiddleware
 from utils.chatgpt.gpt4free_worker import *
-from utils.ocr.image_worker import *
 from utils.chatgpt.requests_counter import *
-from utils.chatgpt.chat_gpt_users_worker import clear_history_of_requests
-from handlers.gdz.classes import gdz_starter
 from handlers.gdz.books_and_numbers import gdz_main_function
 from handlers.gdz.starter import find_solution
 from handlers.start.start_handler import start
@@ -41,18 +31,11 @@ from handlers.gpt.gpt_functions import *
 from aiogram import Bot, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher, FSMContext
-from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.utils.exceptions import Unauthorized
 
-# импорт telebot для отправки сообщений без асинхронного контекста
-from telebot.apihelper import ApiTelegramException
-
 # импорты других библиотек
-import os
-import subprocess
 import time
 from datetime import datetime
-from math import ceil
 from handlers.bot import BotInfo
 
 tokens = {}
@@ -1344,7 +1327,8 @@ def bot_init(token):
                 if call.data == key:
                     flag = True
                     await UserState.bookmark_working.set()
-                    await get_bookmark(call, state)
+                    if not await check_ads_message_buttons_call(call, bot_instance.bot):
+                        await get_bookmark(call, state)
                     break
         if not flag:
             if call.data in ['back_to_bookmarks', 'bookmarks']:
