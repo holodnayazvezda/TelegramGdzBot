@@ -19,9 +19,8 @@ from utils.payments.payment_database_worker import *
 from utils.payments.payment_yoomoney_worker import *
 from utils.pro.pro_subscription_worker import *
 from utils.database.rebooter import reboot_daily_users
-from utils.share.share_worker import save_shared_data, get_save_data_id, get_shared_data
 from utils.string_validator import string_validator, contains_only_allowed_chars
-from utils.users.users import is_new_user, active_now
+from utils.users.users import active_now
 from utils.text_worker import *
 from utils.gdz.megaresheba_worker import get_solution_by_link_at_number
 from utils.middleware.throttling_middleware import ThrottlingMiddleware
@@ -31,10 +30,12 @@ from utils.chatgpt.requests_counter import *
 from utils.chatgpt.chat_gpt_users_worker import clear_history_of_requests
 from handlers.gdz.classes import gdz_starter
 from handlers.gdz.books_and_numbers import gdz_main_function
-from handlers.gdz.gdz_functions import producer, buttons_validator
 from handlers.gdz.starter import find_solution
 from handlers.start.start_handler import start
 from handlers.states.user_state import UserState
+from handlers.gpt.gpt_message_handlers import chat_gpt_messages_handler, chat_gpt_starter, chat_gpt_task_handler
+from handlers.gpt.gpt_callback_handlers import chat_gpt_inline_buttons_handler, get_chat_gpt_version
+from handlers.gpt.gpt_functions import *
 
 # импорты aiogram
 from aiogram import Bot, types
@@ -53,16 +54,6 @@ import time
 from datetime import datetime
 from math import ceil
 from handlers.bot import BotInfo
-
-# глобальная переменная задачи перебора пользователей
-on_processing_chat_gpt_users = False
-# глобальная переменная для хранения текстов пользовательских сообщений и их id (chat gpt)
-chats_ids_and_messages_for_chat_gpt_users = {}
-on_processing_chat_gpt_pro_users = False
-chats_ids_and_messages_for_chat_gpt_pro_users = {}
-# глобальная переменная для перебора рекламных объявлений
-on_processing_advertisements_payments = False
-
 
 tokens = {}
 
@@ -165,430 +156,30 @@ def bot_init(token):
         else:
             await gdz_main_function(call, bot_instance, state=state)
 
-    async def unsuccessful_response_to_revchatgpt(chat_id, user_id, message_text):
-        try:
-            response = await ask_chat_gpt_temporary_api(message_text, user_id)
-            if response:
-                bot_message_text = f'⚠️ Возникли проблемы с получением ответа от основной системы. Это ответ резервного api, модель - *gpt-3.5-turbo*:\n\n{response}'
-                send_message_by_telebot(user_id=user_id, bot_telebot=bot_telebot, bot_id=bot_id, chat_id=chat_id,
-                                        text=bot_message_text,
-                                        parse_mode='markdown')
-            else:
-                raise Exception('The answer is empty')
-        except Exception as e:
-            print(f'unsuccessful chat gpt api error! {e}')
-            send_message_by_telebot(user_id=user_id, bot_telebot=bot_telebot, bot_id=bot_id, chat_id=chat_id,
-                                    text='🛑 Возникла ошибка при получении ответа! Повторите попытку через несколько минут.')
-
-    async def generate_and_send_answer(chat_id, user_id, message_text):
-        bot_telebot.send_chat_action(chat_id=chat_id, action='typing')
-        dictionary_used_in_this_function = await get_dictionary(str(user_id), bot_id, 2)
-        try:
-            try:
-                model = dictionary_used_in_this_function['selected_model']
-            except KeyError:
-                model = 'gpt-3.5-turbo'
-            if model == 'gpt-4-bing':
-                response = await ask_chat_gpt_4(prompt=message_text, user_id=user_id)
-            else:
-                response = await ask_chat_gpt_and_return_answer(model, prompt=message_text, user_id=user_id)
-            if response[1] == 200:
-                send_message_by_telebot(user_id=user_id, bot_telebot=bot_telebot, bot_id=bot_id, chat_id=chat_id,
-                                        text=response[0],
-                                        parse_mode='markdown')
-                Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(user_id), bot_id, str(dictionary_used_in_this_function), 2])).start()
-            else:
-                if response[1] == 400:
-                    send_message_by_telebot(user_id=user_id, bot_telebot=bot_telebot, bot_id=bot_id, chat_id=chat_id,
-                                            text="⚠️ Ваш запрос слишком длинный! Пожалуйста, сократите запрос, что бы бот смог обработать его.",
-                                            parse_mode='markdown')
-                else:
-                    await unsuccessful_response_to_revchatgpt(chat_id, user_id, message_text)
-        except Exception:
-            await unsuccessful_response_to_revchatgpt(chat_id, user_id, message_text)
-
-    async def process_chat_gpt_users():
-        global on_processing_chat_gpt_users, chats_ids_and_messages_for_chat_gpt_users
-        while True:
-            for chat_id, message_data in list(chats_ids_and_messages_for_chat_gpt_users.items()):
-                del chats_ids_and_messages_for_chat_gpt_users[chat_id]
-                await generate_and_send_answer(chat_id, message_data[0], message_data[1])
-            if len(chats_ids_and_messages_for_chat_gpt_users) == 0:
-                on_processing_chat_gpt_users = False
-                return
-
-    async def process_chat_gpt_pro_users():
-        global on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
-        while True:
-            for chat_id, message_data in list(chats_ids_and_messages_for_chat_gpt_pro_users.items()):
-                del chats_ids_and_messages_for_chat_gpt_pro_users[chat_id]
-                await generate_and_send_answer(chat_id, message_data[0], message_data[1])
-            if len(chats_ids_and_messages_for_chat_gpt_pro_users) == 0:
-                on_processing_chat_gpt_pro_users = False
-                return
-
-    def delete_messages(delay, chat_id, users_message_id, bots_message_id):
-        time.sleep(delay)
-        try:
-            bot_telebot.delete_message(chat_id=chat_id, message_id=users_message_id)
-        except ApiTelegramException:
-            pass
-        if bots_message_id is not None:
-            try:
-                bot_telebot.delete_message(chat_id=chat_id, message_id=bots_message_id)
-            except ApiTelegramException:
-                pass
-
-    async def translate_audio_to_text_and_start_generating(message, downloaded_message_file, has_pro, model):
-        global on_processing_chat_gpt_users, chats_ids_and_messages_for_chat_gpt_users, \
-            on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
-        voice_file_path_oga, voice_file_path_wav = None, None
-        try:
-            bot_telebot.send_chat_action(chat_id=message.chat.id, action='upload_voice')
-            if message.voice.file_size / (1024 * 1024) > 5:
-                raise Exception('The weight of the audiofile is more that 5M')
-            if message.voice.duration > 90:
-                raise Exception('The length of the audiofile is more that 90 seconds')
-            voice_file_path_oga = os.path.abspath(downloaded_message_file.name)
-            voice_file_path_wav = voice_file_path_oga.replace('.oga', '.wav')
-            subprocess.run(['ffmpeg', '-i', voice_file_path_oga, voice_file_path_wav],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=8)
-            data = audio_to_text(voice_file_path_wav)
-            chats_ids_and_messages_for_chat_gpt_pro_users[message.chat.id] = [message.from_user.id, data]
-            try:
-                os.remove(voice_file_path_oga)
-            except Exception:
-                pass
-            try:
-                os.remove(voice_file_path_wav)
-            except Exception:
-                pass
-            if model == 'gpt-4-bing':
-                if has_pro:
-                    if on_processing_chat_gpt_pro_users is False:
-                        on_processing_chat_gpt_pro_users = True
-                        Thread(target=async_functions_process_starter, args=(process_chat_gpt_pro_users, [])).start()
-                else:
-                    if on_processing_chat_gpt_users is False:
-                        on_processing_chat_gpt_users = True
-                        Thread(target=async_functions_process_starter, args=(process_chat_gpt_users, [])).start()
-            else:
-                await generate_and_send_answer(message.chat.id, message.from_user.id, data)
-        except Exception as e:
-            if 'The length of the audiofile is more that 90 seconds' in str(e):
-                message_text = '⚠️ Длинна голосового сообщения превышает 1.5 минуты! Оно не может быть обработано.'
-            elif 'The weight of the audiofile is more that 5M' in str(e):
-                message_text = \
-                    '⚠️ Вес голосового сообщения не может превышать 5 мегабайт! Оно не может быть обработано.'
-            else:
-                message_text = '🛑 Не удалось распознать текст голосового сообщения, пожалуйста, попробуйте еще раз.'
-            message_id = send_message_by_telebot(user_id=message.from_user.id, bot_telebot=bot_telebot,
-                                                 bot_id=bot_id, chat_id=message.chat.id, text=message_text)
-            if voice_file_path_oga:
-                try:
-                    os.remove(voice_file_path_oga)
-                except Exception:
-                    pass
-            if voice_file_path_wav:
-                try:
-                    os.remove(voice_file_path_wav)
-                except Exception:
-                    pass
-            Thread(target=delete_messages, args=(5, message.chat.id, message.message_id, message_id)).start()
-
-    async def get_text_from_image_and_start_generating(message, filepath, model):
-        global on_processing_chat_gpt_users, chats_ids_and_messages_for_chat_gpt_users, \
-            on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
-        amount_of_requests_to_ocr_api, amount_of_unsucessful_requests_to_ocr_api = await get_amount_of_requests_for_user(
-            "./data/databases/quantity_of_requests.sqlite3", "quantity_of_requests_to_ocr_space",
-            message.from_user.id), await get_amount_of_requests_for_user("./data/databases/quantity_of_requests.sqlite3",
-                                                                         "quantity_of_unsuccessful_requests_to_ocr_space",
-                                                                         message.from_user.id)
-        has_pro = await is_pro(message.from_user.id)
-        available_amount_of_requests_to_ocr_api = (50 if has_pro else 7) if str(message.from_user.id) not in ADMINS \
-            else 1000
-        if (amount_of_requests_to_ocr_api < available_amount_of_requests_to_ocr_api and
-                amount_of_unsucessful_requests_to_ocr_api < 35):
-            bot_telebot.send_chat_action(chat_id=message.chat.id, action='upload_photo')
-            image_url = f'https://api.telegram.org/file/bot{token}/{filepath}'
-            data = await get_text_from_image(message.from_user.id, image_url, 15)
-            if data:
-                if model == 'gpt-4-bing':
-                    if await is_pro(message.from_user.id):
-                        chats_ids_and_messages_for_chat_gpt_pro_users[message.chat.id] = [message.from_user.id, data]
-                        if on_processing_chat_gpt_pro_users is False:
-                            on_processing_chat_gpt_pro_users = True
-                            Thread(target=async_functions_process_starter, args=(process_chat_gpt_pro_users, [])).start()
-                    else:
-                        chats_ids_and_messages_for_chat_gpt_users[message.chat.id] = [message.from_user.id, data]
-                        if on_processing_chat_gpt_users is False:
-                            on_processing_chat_gpt_users = True
-                            Thread(target=async_functions_process_starter, args=(process_chat_gpt_users, [])).start()
-                else:
-                    await generate_and_send_answer(message.chat.id, message.from_user.id, data)
-            else:
-                message_id = send_message_by_telebot(user_id=message.from_user.id, bot_telebot=bot_telebot,
-                                                     bot_id=bot_id, chat_id=message.chat.id,
-                                                     text='🛑 Не удалось распознать текст с изображения, пожалуйста, попробуйте отправить другое изображение.',
-                                                     parse_mode='markdown')
-                Thread(target=delete_messages, args=(5, message.chat.id, message.message_id, message_id)).start()
-        else:
-            if amount_of_requests_to_ocr_api <= available_amount_of_requests_to_ocr_api:
-                message_text = f'❗️ К сожалению, вы достигли дневного лимита в {available_amount_of_requests_to_ocr_api} отправок изображений к ChatGPT. Вы вновь сможете отправить ChatGPT запрос изображением *после 00:00 по МСК*!'
-                if not has_pro:
-                    message_text = f'{message_text} 💯 Если вы хотите увеличить лимит до *50 запросов в день*, оформите подписку 💎 ReshenijaBot PRO! Вы можете это сделать в *личном кабинете*.'
-                message_id = send_message_by_telebot(user_id=message.from_user.id, bot_telebot=bot_telebot,
-                                                     bot_id=bot_id,
-                                                     chat_id=message.chat.id,
-                                                     text=message_text,
-                                                     parse_mode='markdown')
-            else:
-                message_id = send_message_by_telebot(user_id=message.from_user.id, bot_telebot=bot_telebot,
-                                                     bot_id=bot_id,
-                                                     chat_id=message.chat.id,
-                                                     text='⚠️ Количество ошибок при распознавании текста с изображений достигло 35. Попробуйте еще раз *после 00:00 по МСК*!',
-                                                     parse_mode='markdown')
-            Thread(target=delete_messages, args=(20, message.chat.id, message.message_id, message_id)).start()
-
-    async def add_user_to_queue_and_start_generating(message):
-        global on_processing_chat_gpt_users, chats_ids_and_messages_for_chat_gpt_users, \
-            on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
-        dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
-        try:
-            model = dictionary_used_in_this_function['selected_model']
-        except KeyError:
-            model = 'gpt-3.5-turbo'
-        if model == 'gpt-4':
-            table_name = 'quantity_of_requests_to_gpt4'
-        elif model == 'gpt-4-bing':
-            table_name = 'quantity_of_requests_to_gpt4_bing'
-        else:
-            table_name = 'quantity_of_requests_to_gpt3'
-        has_pro = await is_pro(message.from_user.id)
-        users_data = await get_dictionary(str(message.from_user.id), bot_id, 1)
-        has_working_bots = await get_has_working_bots(message.from_user.id, bot_id, users_data)
-        amount_of_referrals = await get_amount_of_referrals(message.from_user.id, bot_id, users_data)
-        if (await get_amount_of_requests_for_user("./data/databases/quantity_of_requests.sqlite3", table_name, message.from_user.id) <
-                await get_available_amount_of_requests_to_chat_gpt(has_pro, model, has_working_bots, amount_of_referrals)):
-            if message.content_type == 'text':
-                if model == 'gpt-4-bing':
-                    if has_pro:
-                        chats_ids_and_messages_for_chat_gpt_pro_users[message.chat.id] = [message.from_user.id,
-                                                                                          message.text]
-                        if on_processing_chat_gpt_pro_users is False:
-                            on_processing_chat_gpt_pro_users = True
-                            Thread(target=async_functions_process_starter, args=(process_chat_gpt_pro_users, [])).start()
-                    else:
-                        chats_ids_and_messages_for_chat_gpt_users[message.chat.id] = [message.from_user.id,
-                                                                                      message.text]
-                        if on_processing_chat_gpt_users is False:
-                            on_processing_chat_gpt_users = True
-                            Thread(target=async_functions_process_starter, args=(process_chat_gpt_users, [])).start()
-                else:
-                    await generate_and_send_answer(message.chat.id, message.from_user.id, message.text)
-            elif message.content_type == 'voice':
-                if has_pro:
-                    try:
-                        Thread(target=async_functions_process_starter,
-                               args=(translate_audio_to_text_and_start_generating,
-                                     [message, await (await message.voice.get_file()).download(), has_pro, model])).start()
-                    except Exception:
-                        pass
-                else:
-                    message_id = await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id,
-                                                    chat_id=message.chat.id,
-                                                    text='⚠️ Функция отправки запроса Chat GPT голосовым сообщением доступна *только для подписчиков 💎 ReshenijaBot PRO*! Приобрести подписку вы можете в *личном кабинете*.',
-                                                    parse_mode='markdown')
-                    Thread(target=delete_messages, args=(7, message.chat.id, message.message_id, message_id)).start()
-                    return
-            elif message.content_type == 'photo':
-                if message.media_group_id:
-                    dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
-                    if ('last_chat_gpt_photo_media' in dictionary_used_in_this_function and
-                            message.media_group_id == dictionary_used_in_this_function['last_chat_gpt_photo_media']):
-                        try:
-                            await message.delete()
-                        except Exception:
-                            pass
-                        return
-                    dictionary_used_in_this_function['last_chat_gpt_photo_media'] = message.media_group_id
-                    Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
-                try:
-                    Thread(target=async_functions_process_starter,
-                           args=(get_text_from_image_and_start_generating,
-                                 [message, (await message.photo[-1].get_file()).file_path, model])).start()
-                except Exception:
-                    pass
-        else:
-            users_data = await get_dictionary(str(message.from_user.id), bot_id, 1)
-            has_working_bots = await get_has_working_bots(message.from_user.id, bot_id, users_data)
-            amount_of_referrals = await get_amount_of_referrals(message.from_user.id, bot_id, users_data)
-            message_text = f'❗️ К сожалению, вы достигли *дневного лимита в {await get_available_amount_of_requests_to_chat_gpt(has_pro, model, has_working_bots, amount_of_referrals)} запросов к модели {model}*! Это ограничение необходимо для поддержания корректной работы и высокой скорости ответа бота. {model.capitalize()} снова сможет отвечать на ваши вопросы *после 00:00 по МСК*.'
-            if not has_pro:
-                message_text += '\n\n💯 Если вы хотите *увеличить лимит на количество запросов к Chat GPT*, оформите подписку 💎 ReshenijaBot PRO! Вы можете это сделать в *личном кабинете*.'
-            message_id = await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id,
-                                            chat_id=message.chat.id,
-                                            text=message_text,
-                                            parse_mode='markdown')
-            Thread(target=delete_messages, args=(20, message.chat.id, message.message_id, message_id)).start()
-
-    async def clear_chat_gpt_conversation(message):
-        Thread(target=async_functions_process_starter, args=(clear_history_of_requests,
-                                                             ['./data/databases/history_of_requests_to_chatgpt.sqlite3', 'users_history',
-                                                              message.from_user.id])).start()
-        await bot.send_message(chat_id=message.chat.id, text="✅ История диалога с ChatGPT очищена")
-
     @dp.message_handler(state=[UserState.chat_gpt_writer], content_types=['text', 'voice', 'photo'])
-    async def chat_gpt_task_handler(message: types.Message):
-        dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
-        if message.text == '↩ Назад в главное меню':
-            await start(message, bot_instance)
-        elif message.text == '🗑 Очистить историю диалога':
-            await clear_chat_gpt_conversation(message)
-        elif message.text == '/statistics':
+    async def gpt_task_handler(message: types.Message):
+        if message.text == '/statistics':
             await statistics(message)
         elif message.text == '/bookmarks':
             await get_bookmarks(message)
-        elif message.text == '/chat_gpt':
-            await chat_gpt_starter(message)
         else:
-            try:
-                Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
-                await add_user_to_queue_and_start_generating(message)
-            except Exception as e:
-                print(e)
-                try:
-                    await bot.delete_message(message.chat.id, message.message_id)
-                except Exception:
-                    pass
+            await chat_gpt_task_handler(message, bot_instance)
 
     @dp.callback_query_handler(state=UserState.chat_gpt_writer)
-    async def chat_gpt_inline_buttons_handler(call: types.CallbackQuery, state: FSMContext):
-        if call.data == 'back_to_model_selection':
-            dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
-            dictionary_used_in_this_function['text_get_for_chat_gpt'] = False
-            Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
-            await chat_gpt_starter(call)
-
-    # это функция, отвечающая за обработку нажатия на 'найти решение'
-    async def find_solution(message):
-        Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
-        back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
-        await bot.send_message(message.chat.id, text='🟢', reply_markup=back_to_main_menu_markup)
-        await gdz_starter(message, bot_instance)
-        await UserState.find_solution.set()
+    async def gpt_inline_buttons_handler(call: types.CallbackQuery, state: FSMContext):
+        await chat_gpt_inline_buttons_handler(call, state, bot_instance)
 
     @dp.callback_query_handler(state=UserState.chat_gpt_worker)
-    async def get_chat_gpt_version(call: types.CallbackQuery, state: FSMContext):
-        Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
-        dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
-        if 'gpt-' in call.data:
-            users_data = await get_dictionary(str(call.from_user.id), bot_id, 1)
-            has_working_bots = await get_has_working_bots(call.from_user.id, bot_id, users_data)
-            amount_of_referrals = await get_amount_of_referrals(call.from_user.id, bot_id, users_data)
-            selected_model = call.data
-            dictionary_used_in_this_function['selected_model'] = selected_model
-            has_pro = await is_pro(call.from_user.id)
-            if selected_model == 'gpt-4-bing':
-                table_name = 'quantity_of_requests_to_gpt4_bing'
-            else:
-                table_name = 'quantity_of_requests_to_gpt3'
-            available_amount_of_requests = await get_available_amount_of_requests_to_chat_gpt(has_pro, selected_model,
-                                                                                              has_working_bots,
-                                                                                              amount_of_referrals)
-            amount_of_requests = await get_amount_of_requests_for_user('./data/databases/quantity_of_requests.sqlite3', table_name,
-                                                                        call.from_user.id)
-            rest_of_requests = available_amount_of_requests - amount_of_requests
-            message_text = f'✅ Вы выбрали модель: *{selected_model}*.\n\n'
-            if rest_of_requests:
-                message_text += f'⏳ Сегодня вы можете задать ей вопрос еще *{rest_of_requests} раз(а)*.'
-                if has_pro:
-                    message_text += f'\n\n💎 Вы являетесь подписчиком ReshenijaBot PRO, поэтому ваш увеличенный лимит для выбранной модели составляет {available_amount_of_requests} запросов в день.'
-                else:
-                    message_text += f'\n\nℹ️ Ваш лимит для выбранной модели составляет {available_amount_of_requests} запросов в день.'
-                await UserState.chat_gpt_writer.set()
-                dictionary_used_in_this_function['text_get_for_chat_gpt'] = True
-            else:
-                message_text += f'❗️ Вы достигли дневного лимита в {available_amount_of_requests} запросов к выбранной модели. Она вновь сможет отвечать на ваши запросы завтра.'
-                if not has_pro:
-                    users_data = await get_dictionary(str(call.from_user.id), bot_id, 1)
-                    has_working_bots = await get_has_working_bots(call.from_user.id, bot_id, users_data)
-                    amount_of_referrals = await get_amount_of_referrals(call.from_user.id, bot_id, users_data)
-                    message_text += f'\n\n 💯 Чтобы увеличить лимит до {await get_available_amount_of_requests_to_chat_gpt(True, selected_model, has_working_bots, amount_of_referrals)} запросов в день, подключите PRO подписку в личном кабинете.'
-            markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton(text='⏪ Назад', callback_data='back_to_model_selection'))
-            await try_edit_or_send_message(call.from_user.id, bot, bot_id, call.message.chat.id, message_text,
-                                           dictionary_used_in_this_function['id_of_message_with_markup'], markup,
-                                           'markdown')
-            Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
-        elif call.data == 'back_to_model_selection':
-            dictionary_used_in_this_function['text_get_for_chat_gpt'] = False
-            Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
-            await chat_gpt_starter(call)
+    async def get_gpt_version(call: types.CallbackQuery, state: FSMContext):
+        await get_chat_gpt_version(call, state, bot_instance)
 
     @dp.message_handler(state=[UserState.chat_gpt_worker], content_types=['text'])
-    async def chat_gpt_messages_handler(message: types.Message):
-        if message.text == '↩ Назад в главное меню':
-            await start(message, bot_instance)
-        elif message.text == '🗑 Очистить историю диалога':
-            await clear_chat_gpt_conversation(message)
-        else:
-            await generate_and_send_answer(message.chat.id, message.from_user.id, message.text)
+    async def gpt_messages_handler(message: types.Message):
+        await chat_gpt_messages_handler(message, bot_instance)
 
     @dp.message_handler(state='*', commands=['chat_gpt'])
-    async def chat_gpt_starter(message):
-        if isinstance(message, types.Message):
-            chat_id = message.chat.id
-        else:
-            chat_id = message.message.chat.id
-        Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), chat_id, bot_id])).start()
-        dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
-        text = '🤖 Привет, я *ИИ Сhat GPT*. Вы можете задавать мне вопросы, а я постараюсь ' \
-               'максимально качественно на них ответить. Задавайте вопрос как можно точнее. От этого зависит точность ответа. ' \
-               '\n\n✨ Вы можете спросить меня 3 способами:\n1) Отправив *текстовое сообщение*\n2) Отправив ' \
-               '*изображение с заданием* (Это функция дорабатывается. Бот пока не распознает сложные математические ' \
-               'выражения (дроби, квадратные уравнения и т.п.). *Не следует* пытаться решить их при помощи него.\n3) ' \
-               'Отправив мне голосовое сообщение с вопросом (доступно с подпиской PRO).'
-        has_pro = await is_pro(message.from_user.id)
-        rest_of_amount_of_image_sending, amount_of_unsucessful_requests_to_ocr_api = (
-            ((50 if has_pro else 7) if str(message.from_user.id) not in ADMINS else 1000) -
-            (await get_amount_of_requests_for_user("./data/databases/quantity_of_requests.sqlite3", "quantity_of_requests_to_ocr_space",
-                                                   message.from_user.id)),
-            await get_amount_of_requests_for_user("./data/databases/quantity_of_requests.sqlite3",
-                                                  "quantity_of_unsuccessful_requests_to_ocr_space",
-                                                  message.from_user.id))
-        if rest_of_amount_of_image_sending > 0 and amount_of_unsucessful_requests_to_ocr_api < 35:
-            text += f'\n\n🖼 Сегодня вы можете отправлять мне изображения еще {rest_of_amount_of_image_sending} раз.'
-        else:
-            text += f'\n\n🖼 Вы вновь сможете отправлять мне изображения завтра.'
-        text += f'\n\n🚀 Я поддерживаю две модели:\n1) *gpt-3.5-turbo - *самая популярная и доступная модель в семействе GPT, оптимизирована для чата и отлично справляется с пониманием и генерацией текста. Лимит токенов: {await get_max_tokens_in_response_for_user(has_pro)}.\n2) *gpt-4-bing* - одна из самых совершенных моделей в семействе ChatGPT, способна справляться со сложными и творческими задачами. Имеет *доступ в интернет* и *неограниченный объем* базы знаний. Идеально подойдет для написания сочинений, рефератов, и т.п. Лимит токенов: {await get_max_tokens_in_response_for_user(has_pro)}.\n\n*Лимит токенов* определяет макcимально возможную *длину вашего запроса*. 1 токен примерно равен 3 символам.'
-        if has_pro:
-            text += '\n\n💎 Поскольку вы являетесь подписчиком ReshenijaBot PRO, лимиты токенов удвоены.'
-        text += '\n\nВыбери необходимую модель Chat GPT и задай свой вопрос!'
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton(text='gpt-3.5-turbo', callback_data='gpt-3.5-turbo'))
-        markup.add(types.InlineKeyboardButton(text='gpt-4 (bing ai)', callback_data='gpt-4-bing'))
-        if ('id_of_message_with_markup' not in dictionary_used_in_this_function or not
-        dictionary_used_in_this_function['id_of_message_with_markup']):
-            back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            back_to_main_menu_markup.add(types.KeyboardButton(text='🗑 Очистить историю диалога'))
-            back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
-            await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id, chat_id=chat_id, text='🟢',
-                               reply_markup=back_to_main_menu_markup, do_not_add_ads=True)
-            message_id = await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id,
-                                            chat_id=chat_id,
-                                            text=text, reply_markup=markup, parse_mode='markdown')
-        else:
-            message_id = await try_edit_or_send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id,
-                                                        chat_id=chat_id,
-                                                        text=text,
-                                                        message_id=dictionary_used_in_this_function[
-                                                            'id_of_message_with_markup'], reply_markup=markup,
-                                                        parse_mode='markdown')
-        dictionary_used_in_this_function['id_of_message_with_markup'] = message_id
-        Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
-        await UserState.chat_gpt_worker.set()
+    async def gpt_starter(message):
+        await chat_gpt_starter(message, bot_instance)
 
     # это функция, отвечающая за открытие закладок
     @dp.message_handler(state='*', commands=['bookmarks'])
@@ -1809,7 +1400,7 @@ def bot_init(token):
                 await UserState.on_pro.set()
                 await buy_pro_buttons_handler(call, state)
             elif 'gpt-' in call.data or call.data == 'back_to_model_selection':
-                await get_chat_gpt_version(call, state)
+                await get_chat_gpt_version(call, state, bot_instance)
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.message_handler(state='*', commands=['statistics'])
@@ -1918,7 +1509,7 @@ def bot_init(token):
                                                                    '🗑 Очистить историю диалога'] + MAIN_COMMANDS:
             if dictionary_to_use_in_this_function['text_get_for_chat_gpt']:
                 await UserState.chat_gpt_writer.set()
-                await chat_gpt_task_handler(message)
+                await chat_gpt_task_handler(message, bot_instance)
             else:
                 try:
                     await message.delete()
@@ -1927,7 +1518,7 @@ def bot_init(token):
         elif 'text_get_for_chat_gpt' in dictionary_to_use_in_this_function and message.text not in await \
                 get_buttons_list_for_user(message.from_user.id) + ['↩ Назад в главное меню'] + MAIN_COMMANDS \
                 and message.text == '🗑 Очистить историю диалога':
-            await clear_chat_gpt_conversation(message)
+            await clear_chat_gpt_conversation(message, bot_instance)
         elif 'on_new_bot_creation' in dictionary_to_use_in_this_function and message.text not in await \
                 get_buttons_list_for_user(message.from_user.id) + ['↩ Назад в главное меню'] + MAIN_COMMANDS:
             if dictionary_to_use_in_this_function['on_new_bot_creation']:
@@ -1953,9 +1544,9 @@ def bot_init(token):
             if message.text == '📈 Статистика' or message.text == '/statistics':
                 await statistics(message)
             elif message.text == '⁉️ Найти решение':
-                await find_solution(message)
+                await find_solution(message, bot_instance)
             elif message.text == '🤖 ИИ Chat GPT' or message.text == '/chat_gpt':
-                await chat_gpt_starter(message)
+                await chat_gpt_starter(message, bot_instance)
             elif message.text == '📌 Закладки' or message.text == '/bookmarks':
                 await get_bookmarks(message)
             elif message.text == '👤 Мой аккаунт' or message.text == '/my_account':
