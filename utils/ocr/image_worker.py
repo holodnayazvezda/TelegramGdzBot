@@ -4,7 +4,7 @@ import data.config
 from utils.chatgpt.requests_counter import *
 
 
-async def get_text_from_image(user_id: int, image_url: str, timeout=None):
+async def get_text_from_image(user_id: int, image_url: str, timeout: int=None):
     try:
         ocr_data = requests.get(f"https://api.ocr.space/parse/imageurl?apikey={OCR_SPACE_API_KEYS[data.config.amount_of_requests_to_ocr_api % 15]}&url={image_url}&detectOrientation=True&filetype=JPG&OCREngine=2&isTable=False&scale=True", timeout)
         ocr_data = ocr_data.json()

@@ -1,7 +1,7 @@
 import sqlite3
 
 
-async def create_or_dump_user(id_of_user, bot_id, users_dictionary, type_of_dict):  # типы данных str, str, str, int!
+async def create_or_dump_user(id_of_user: str, bot_id: str, users_dictionary: str, type_of_dict: int) -> None:
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     if type_of_dict == 1:
@@ -27,7 +27,7 @@ async def create_or_dump_user(id_of_user, bot_id, users_dictionary, type_of_dict
     conn.close()
 
 
-async def get_dictionary(id_of_user, bot_id, type_of_dict):
+async def get_dictionary(id_of_user: int, bot_id: int, type_of_dict: int) -> dict:
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     if type_of_dict == 1:

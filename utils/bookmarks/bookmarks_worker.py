@@ -2,7 +2,7 @@ import asyncio
 import sqlite3
 
 
-async def update_bookmarks(user_id, new_dict):  # тип данных str, dict
+async def update_bookmarks(user_id: str, new_dict: dict) -> None:
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     try:
@@ -16,7 +16,7 @@ async def update_bookmarks(user_id, new_dict):  # тип данных str, dict
     conn.close()
 
 
-async def get_dict_of_bookmarks(user_id):  # тип данных - str
+async def get_dict_of_bookmarks(user_id: str):
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     # получить из таблицы user_id колонку bookmarks

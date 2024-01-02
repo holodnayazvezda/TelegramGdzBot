@@ -6,7 +6,7 @@ import os
 from data.startup_texts import *
 
 
-async def start_server(sleep_after_request, stop_error_count):
+async def start_server(sleep_after_request: int, stop_error_count: int) -> None:
     error_count = 0
     is_working = True
     process = subprocess.Popen(['python', './handlers/super_main.py'])
@@ -33,7 +33,7 @@ async def start_server(sleep_after_request, stop_error_count):
 
 
 if __name__ == '__main__':
-    os.system("pip install -U g4f==0.1.9.3")
+    os.system("pip install -U g4f")
     try:
         asyncio.run(start_server(3, 2))
     except KeyboardInterrupt:

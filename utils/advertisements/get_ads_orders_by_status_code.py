@@ -4,7 +4,7 @@ import asyncio
 from utils.advertisements.ads_database_worker import get_ads_data
 
 
-async def get_ads_orders_by_status_code(status_code: int = None):
+async def get_ads_orders_by_status_code(status_code: int = None) -> dict:
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     if status_code:

@@ -13,7 +13,7 @@ from utils.async_process_runner import start
 from utils.chatgpt.apikeys_worker import counter_of_requests
 
 
-async def ask_chat_gpt_and_return_answer(model: str, prompt: str, user_id: int, recursion_len=0):
+async def ask_chat_gpt_and_return_answer(model: str, prompt: str, user_id: int, recursion_len: int = 0) -> tuple:
     tokens_in_response = len(tiktoken.encoding_for_model("gpt-3.5-turbo").encode(prompt)) + 7
     global counter_of_requests
     from apikeys_worker import OPENAI_API_KEYS, SHUTTLEAI_API_KEYS

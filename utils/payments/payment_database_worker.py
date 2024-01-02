@@ -1,7 +1,7 @@
 import sqlite3
 
 
-async def add_payment(order_id: str, customer_id: int, customer_chat_id: int, bot_token: str, purchase_type=1):
+async def add_payment(order_id: str, customer_id: int, customer_chat_id: int, bot_token: str, purchase_type: int=1) -> None:
     conn = sqlite3.connect('./data/databases/payments.sqlite3')
     c = conn.cursor()
     table_name = 'ads_payments' if purchase_type == 1 else 'premium_payments'
@@ -16,7 +16,7 @@ async def add_payment(order_id: str, customer_id: int, customer_chat_id: int, bo
     conn.close()
 
 
-async def increase_processing_time(order_id: str, purchase_type=1):
+async def increase_processing_time(order_id: str, purchase_type: int=1) -> None:
     conn = sqlite3.connect('./data/databases/payments.sqlite3')
     c = conn.cursor()
     table_name = 'ads_payments' if purchase_type == 1 else 'premium_payments'
@@ -26,7 +26,7 @@ async def increase_processing_time(order_id: str, purchase_type=1):
     conn.close()
 
 
-async def delete_payment(order_id: str, purchase_type=1):
+async def delete_payment(order_id: str, purchase_type: int=1) -> None:
     conn = sqlite3.connect('./data/databases/payments.sqlite3')
     c = conn.cursor()
     table_name = 'ads_payments' if purchase_type == 1 else 'premium_payments'
@@ -36,7 +36,7 @@ async def delete_payment(order_id: str, purchase_type=1):
     conn.close()
 
 
-def get_all_payments_data():
+def get_all_payments_data() -> list[tuple]:
     conn = sqlite3.connect('./data/databases/payments.sqlite3')
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS ads_payments (order_id TEXT, customer_id INTEGER, customer_chat_id INTEGER, bot_token TEXT, processing_time INTEGER, purchase_type INTEGER)')

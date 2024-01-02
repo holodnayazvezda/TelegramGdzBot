@@ -6,7 +6,7 @@ from data.config import (LENGTH_OF_GPT3_HISTORY_FOR_USERS, LENGTH_OF_GPT3_HISTOR
 from utils.database.folder_worker import get_dictionary
 
 
-async def add_request_to_history(database_name: str, table_name: str, user_id: int, request_text: str, role: str):
+async def add_request_to_history(database_name: str, table_name: str, user_id: int, request_text: str, role: str) -> None:
     conn = sqlite3.connect(database_name)
     c = conn.cursor()
     c.execute(f'CREATE TABLE IF NOT EXISTS {table_name} (id TEXT, requests TEXT)')
@@ -22,7 +22,7 @@ async def add_request_to_history(database_name: str, table_name: str, user_id: i
     conn.close()
 
 
-async def get_history_of_requests(database_name: str, table_name: str, user_id: int, has_pro: bool, model: str):
+async def get_history_of_requests(database_name: str, table_name: str, user_id: int, has_pro: bool, model: str) -> list:
     conn = sqlite3.connect(database_name)
     c = conn.cursor()
     c.execute(f'CREATE TABLE IF NOT EXISTS {table_name} (id TEXT, requests TEXT)')
@@ -48,7 +48,7 @@ async def get_history_of_requests(database_name: str, table_name: str, user_id: 
         return []
 
 
-async def clear_history_of_requests(database_name: str, table_name: str, user_id: int):
+async def clear_history_of_requests(database_name: str, table_name: str, user_id: int) -> None:
     conn = sqlite3.connect(database_name)
     c = conn.cursor()
     c.execute(f'CREATE TABLE IF NOT EXISTS {table_name} (id TEXT, requests TEXT)')
@@ -58,7 +58,7 @@ async def clear_history_of_requests(database_name: str, table_name: str, user_id
     conn.close()
 
 
-async def get_amount_of_referrals(user_id: int, bot_id: int, users_data: dict = None):
+async def get_amount_of_referrals(user_id: int, bot_id: int, users_data: dict = None) -> int:
     if not users_data:
         users_data = await get_dictionary(str(user_id), bot_id, 1)
     if 'referral_users' in users_data:
@@ -68,7 +68,7 @@ async def get_amount_of_referrals(user_id: int, bot_id: int, users_data: dict = 
     return amount_of_referrals
 
 
-async def get_has_working_bots(user_id: int, bot_id: int, users_data: dict = None):
+async def get_has_working_bots(user_id: int, bot_id: int, users_data: dict = None) -> bool:
     if not users_data:
         users_data = await get_dictionary(str(user_id), bot_id, 1)
     if 'has_working_bots' in users_data:

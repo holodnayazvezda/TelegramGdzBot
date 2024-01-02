@@ -4,7 +4,7 @@ from telebot import TeleBot
 from telebot.apihelper import ApiTelegramException
 
 
-async def check_bot_token(bot_token):
+async def check_bot_token(bot_token: str) -> dict:
     try:
         bot = TeleBot(token=bot_token, parse_mode=None)
         bot_info = bot.get_me()
@@ -14,7 +14,7 @@ async def check_bot_token(bot_token):
         return {'ok': False, 'data': {'name': None, 'username': None}}
 
 
-async def get_bot_info(bot_token):
+async def get_bot_info(bot_token: str) -> dict:
     try:
         bot = TeleBot(token=bot_token, parse_mode=None)
         bot_info = bot.get_me()

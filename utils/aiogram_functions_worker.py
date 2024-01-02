@@ -1,5 +1,7 @@
 import asyncio
 from aiogram.utils.exceptions import MessageNotModified, CantParseEntities
+from aiogram import Bot, types
+from telebot import TeleBot
 from threading import Thread
 
 from utils.advertisements.ads_user_worker import *
@@ -12,8 +14,8 @@ def cut_the_message_text(message_text):
     return message_text
 
 
-async def try_edit_or_send_message(user_id, bot, bot_id, chat_id, text, message_id=None, reply_markup=None,
-                                   parse_mode=None, do_not_add_ads=False):
+async def try_edit_or_send_message(user_id: int, bot: Bot, bot_id: int, chat_id: int, text: str, message_id: int=None, reply_markup=None,
+                                   parse_mode: str=None, do_not_add_ads: bool=False) -> int:
     ads_data_for_user = await get_ads_for_user(user_id, bot_id, do_not_add_ads)
     if ads_data_for_user:
         if parse_mode:
@@ -46,8 +48,8 @@ async def try_edit_or_send_message(user_id, bot, bot_id, chat_id, text, message_
                                                   True)
 
 
-async def send_message(user_id, bot, bot_id, chat_id, text, message_id=None, reply_markup=None, parse_mode=None,
-                       do_not_add_ads=False):
+async def send_message(user_id: int, bot: Bot, bot_id: int, chat_id: int, text: str, message_id: int=None, reply_markup=None, parse_mode: str=None,
+                       do_not_add_ads: bool=False):
     ads_data_for_user = await get_ads_for_user(user_id, bot_id, do_not_add_ads)
     if ads_data_for_user:
         if parse_mode:
@@ -69,8 +71,8 @@ async def send_message(user_id, bot, bot_id, chat_id, text, message_id=None, rep
         return await send_message(user_id, bot, bot_id, chat_id, text, message_id, reply_markup, None, True)
 
 
-async def send_photo(user_id, bot, bot_id, chat_id, photo, caption=None, message_id=None, reply_markup=None,
-                     parse_mode=None, do_not_add_ads=False):
+async def send_photo(user_id: int, bot: Bot, bot_id: int, chat_id: int, photo, caption: str=None, message_id: int=None, reply_markup=None,
+                     parse_mode: str=None, do_not_add_ads: bool=False):
     ads_data_for_user = await get_ads_for_user(user_id, bot_id, do_not_add_ads)
     if ads_data_for_user and caption:
         if parse_mode:
@@ -92,8 +94,8 @@ async def send_photo(user_id, bot, bot_id, chat_id, photo, caption=None, message
         return await send_photo(user_id, bot, bot_id, chat_id, caption, photo, message_id, reply_markup, None, True)
 
 
-def send_message_by_telebot(user_id, bot_telebot, bot_id, chat_id, text, message_id=None, reply_markup=None,
-                            parse_mode=None, do_not_add_ads=False):
+def send_message_by_telebot(user_id: int, bot_telebot: TeleBot, bot_id: int, chat_id: int, text: str, message_id: int=None, reply_markup=None,
+                            parse_mode: str=None, do_not_add_ads: bool=False):
     future = asyncio.Future()
 
     async def wrapper():
@@ -124,7 +126,7 @@ def send_message_by_telebot(user_id, bot_telebot, bot_id, chat_id, text, message
             return send_message_by_telebot(user_id, bot_telebot, bot_id, chat_id, text, message_id, reply_markup, None, True)
 
 
-async def answer_callback_query(call, bot, text=None, show_alert=False):
+async def answer_callback_query(call: types.CallbackQuery, bot: Bot, text: str=None, show_alert: bool=False):
     try:
         await bot.answer_callback_query(callback_query_id=call.id, text=text, show_alert=show_alert)
     except Exception:

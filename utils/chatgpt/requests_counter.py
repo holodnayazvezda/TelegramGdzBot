@@ -1,7 +1,7 @@
 import sqlite3
 
 
-async def increase_the_number_of_requests_for_the_user(database_name: str, table_name: str, user_id: int):
+async def increase_the_number_of_requests_for_the_user(database_name: str, table_name: str, user_id: int) -> None:
     conn = sqlite3.connect(database_name)
     c = conn.cursor()
     c.execute(f'CREATE TABLE IF NOT EXISTS {table_name} (id INTEGER, amount_of_requests INTEGER)')
@@ -14,7 +14,7 @@ async def increase_the_number_of_requests_for_the_user(database_name: str, table
     conn.close()
 
 
-async def get_amount_of_requests_for_user(database_name: str, table_name: str, user_id: int):
+async def get_amount_of_requests_for_user(database_name: str, table_name: str, user_id: int) -> int:
     conn = sqlite3.connect(database_name)
     c = conn.cursor()
     c.execute(f'CREATE TABLE IF NOT EXISTS {table_name} (id INTEGER, amount_of_requests INTEGER)')

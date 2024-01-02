@@ -10,7 +10,7 @@ from threading import Thread
 
 
 # это функция, отвечающая за обработку нажатия на 'найти решение'
-async def find_solution(message, bot_instance: BotInfo):
+async def find_solution(message: types.Message, bot_instance: BotInfo) -> None:
     Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_instance.bot_id])).start()
     back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))

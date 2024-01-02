@@ -7,7 +7,7 @@ from utils.bot.bots_worker import reboot_daily_users_in_all_bots
 from utils.pro.pro_subscription_worker import unsubscribe_users_from_pro
 
 
-async def reboot_daily_users(wait_for):
+async def reboot_daily_users(wait_for: int) -> None:
     while True:
         await asyncio.sleep(wait_for)
         date = datetime.today().strftime('%H:%M')
@@ -30,4 +30,4 @@ async def reboot_daily_users(wait_for):
             c.close()
             conn.close()
             await reboot_daily_users_in_all_bots()
-            os.system("pip install -U g4f==0.1.9.3")
+            os.system("pip install -U g4f")

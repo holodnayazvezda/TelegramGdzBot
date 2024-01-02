@@ -7,7 +7,7 @@ from utils.pro.pro_subscription_worker import is_pro
 from utils.async_process_runner import start
 
 
-async def get_ads_for_user(user_id: int, bot_id: int, return_none: bool):
+async def get_ads_for_user(user_id: int, bot_id: int, return_none: bool) -> tuple:
     if not await is_pro(user_id) and not return_none:
         users_data = await get_dictionary(str(user_id), bot_id, 1)
         paid_ads_data = await get_paid_ads()
@@ -30,7 +30,7 @@ async def get_ads_for_user(user_id: int, bot_id: int, return_none: bool):
     return None
 
 
-async def view_ads_by_user(user_id: int, bot_id: int, ads_id: int):
+async def view_ads_by_user(user_id: int, bot_id: int, ads_id: int) -> None:
     await add_watcher(ads_id)
     users_data = await get_dictionary(str(user_id), bot_id, 1)
     if 'watched_ads_ids' in users_data:

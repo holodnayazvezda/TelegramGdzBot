@@ -1,5 +1,4 @@
-import sqlite3
-from threading import Thread
+from aiogram import types
 
 from utils.bot.bots_worker import get_amount_of_users
 from data.config import BOT_USERNAME, BOT_VERSION, BOT_TELEGRAM_CHANNEL_USERNAME, BOT_TELEGRAM_GROUP_USERNAME, \
@@ -7,8 +6,11 @@ from data.config import BOT_USERNAME, BOT_VERSION, BOT_TELEGRAM_CHANNEL_USERNAME
 from utils.users.users import active_now
 from utils.async_process_runner import start
 
+import sqlite3
+from threading import Thread
 
-async def welcome_user(message):
+
+async def welcome_user(message: types.Message) -> str:
     return f'''
 🖐 Привет, {message.from_user.first_name}, выбери желаемое действие!
 
@@ -16,7 +18,7 @@ async def welcome_user(message):
 👥 Наш чат: *{BOT_TELEGRAM_GROUP_USERNAME}*'''
 
 
-async def get_amount_of_users_in_all_bots():
+async def get_amount_of_users_in_all_bots() -> int:
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     try:
@@ -28,7 +30,7 @@ async def get_amount_of_users_in_all_bots():
     return amount_of_users
 
 
-async def check_amount_of_users(message, bot_id):
+async def check_amount_of_users(message: types.Message, bot_id: int) -> str:
     Thread(target=start, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
@@ -42,7 +44,7 @@ async def check_amount_of_users(message, bot_id):
     return f"ℹ️ Общее количество пользователей бота: {await get_amount_of_users_in_all_bots()}, активных за сегодня: {amount_of_daily_users}.\n\n🤖 Количесво пользователей в этом боте: {users_in_this_bot}, активных за сегодня: {daily_users_in_this_bot}."
 
 
-async def for_content_owners(message, bot_id):
+async def for_content_owners(message: types.Message, bot_id: int) -> str:
     Thread(target=start, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
     return 'Изображения обложек учебников, а также выдержки из соответствующих учебных пособий предоставлены ' \
            'исключительно для удобства пользователей. Использование выдержек из учебных пособий в "разумных ' \
@@ -58,7 +60,7 @@ async def for_content_owners(message, bot_id):
            'https://chat.openai.com).'
 
 
-async def for_users(message, bot_id):
+async def for_users(message: types.Message, bot_id: int) -> str:
     Thread(target=start, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
     return f'''❤️ Спасибо, что пользуетесь @ReshenijaBot!
 
@@ -76,7 +78,7 @@ async def for_users(message, bot_id):
 '''
 
 
-async def bot_information(message, bot_id):
+async def bot_information(message: types.Message, bot_id: int) -> str:
     Thread(target=start, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
     return f''' 🤖: Вы используете *{BOT_USERNAME}*
 

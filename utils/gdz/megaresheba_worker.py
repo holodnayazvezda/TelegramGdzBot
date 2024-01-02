@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from data.config import HEADERS
 
 
-async def get_solution_by_link_at_number(link_at_number: str):
+async def get_solution_by_link_at_number(link_at_number: str) -> dict:
     r = requests.get(link_at_number, headers=HEADERS)
     if r.status_code == 200:
         try:

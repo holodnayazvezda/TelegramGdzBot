@@ -15,7 +15,7 @@ from handlers.gdz.books_and_numbers import gdz_main_function
 
 from threading import Thread
 
-async def start(message: types.Message, bot_instance: BotInfo):
+async def start(message: types.Message, bot_instance: BotInfo) -> None:
         if '/start' in message.text and len(message.text.split()) > 1:
             if message.text.split()[1].isdigit():
                 referral_user_id = int(message.text.split()[1])

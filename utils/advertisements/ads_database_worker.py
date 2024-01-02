@@ -8,7 +8,7 @@ from data.config import ADMINS
 from utils.async_process_runner import start
 
 
-async def send_ads_on_moderation(ads_id, customer_id, watches_ordered, price, text):
+async def send_ads_on_moderation(ads_id: int, customer_id: int, watches_ordered: int, price, text: str) -> None:
     markup = types.InlineKeyboardMarkup()
     markup.add(*[types.InlineKeyboardButton(text='✅', callback_data=f'pass_moderation_{ads_id}'),
                  types.InlineKeyboardButton(text='❌', callback_data=f'reject_moderation_{ads_id}')])
@@ -23,7 +23,7 @@ async def send_ads_on_moderation(ads_id, customer_id, watches_ordered, price, te
             pass
 
 
-async def create_ads(customer_id, customer_chat_id, bot_token, watches_ordered, price, text):
+async def create_ads(customer_id: int, customer_chat_id: int, bot_token: str, watches_ordered: int, price: int, text: str) -> int:
     if str(customer_id) in ADMINS:
         status = 4
     else:
@@ -42,7 +42,7 @@ async def create_ads(customer_id, customer_chat_id, bot_token, watches_ordered, 
     return id_of_ads
 
 
-async def get_ads_data(ads_id):
+async def get_ads_data(ads_id: int) -> dict:
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     data = c.execute(f'SELECT * FROM ads_{ads_id}').fetchone()
@@ -52,7 +52,7 @@ async def get_ads_data(ads_id):
             'amount_of_watches': data[6], 'status': data[7]}
 
 
-async def add_watcher(ads_id):
+async def add_watcher(ads_id: int) -> None:
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     c.execute(f'UPDATE ads_{ads_id} SET amount_of_watches=?', (c.execute(f'SELECT amount_of_watches FROM ads_{ads_id}').fetchone()[0] + 1,))
@@ -64,7 +64,7 @@ async def add_watcher(ads_id):
         await change_ads_status(ads_id, 5)
 
 
-async def get_next_id_from_database():
+async def get_next_id_from_database() -> int:
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     try:
@@ -76,7 +76,7 @@ async def get_next_id_from_database():
     return next_id
 
 
-async def get_ads_owner_chat_data(ads_id):
+async def get_ads_owner_chat_data(ads_id: int) -> int:
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     data = c.execute(f'SELECT customer_chat_id, bot_token FROM ads_{ads_id}').fetchone()
@@ -85,7 +85,7 @@ async def get_ads_owner_chat_data(ads_id):
     return {'chat_id': data[0], 'bot_token': data[1]}
 
 
-async def change_ads_status(ads_id, new_status, sending_data=None, do_not_send_message=False):
+async def change_ads_status(ads_id: int, new_status: int, sending_data=None, do_not_send_message: bool=False):
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     current_status = c.execute(f'SELECT status FROM ads_{ads_id}').fetchone()[0]
@@ -155,7 +155,7 @@ async def change_ads_status(ads_id, new_status, sending_data=None, do_not_send_m
             pass
 
 
-async def get_paid_ads():
+async def get_paid_ads() -> dict:
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     ads_tables_names = list(map(lambda el: el[0], c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()))

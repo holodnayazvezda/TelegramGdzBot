@@ -1,4 +1,4 @@
-async def get_y_m_d_text(dmy: dict):
+async def get_y_m_d_text(dmy: dict) -> str:
     words = {'y': ['лет', 'год', 'года'], 'm': ['месяцев', 'месяц', 'месяца'], 'd': ['дней', 'день', 'дня']}
 
     out = []

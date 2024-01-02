@@ -19,7 +19,7 @@ from handlers.bot import BotInfo
 from threading import Thread
 
 
-async def gdz_main_function(call: types.CallbackQuery, bot_instance: BotInfo, dictionary_to_use=None, state: FSMContext = None):
+async def gdz_main_function(call: types.CallbackQuery, bot_instance: BotInfo, dictionary_to_use=None, state: FSMContext = None) -> None:
     if dictionary_to_use:
         dictionary_used_in_this_function = dictionary_to_use
     else:

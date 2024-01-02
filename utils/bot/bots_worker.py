@@ -3,7 +3,7 @@ import sqlite3
 
 
 # непосредственно данные бота
-async def update_or_create_bot_data(bot_token, bot_dict, user_id):
+async def update_or_create_bot_data(bot_token: str, bot_dict: dict, user_id: int):
     bot_id = bot_token.split(':')[0]
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
@@ -20,7 +20,7 @@ async def update_or_create_bot_data(bot_token, bot_dict, user_id):
     conn.close()
 
 
-async def write_bot_users(user_id, bot_id):  # типы данных str, str
+async def write_bot_users(user_id: str, bot_id: str) -> None:
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
     c.execute(f"CREATE TABLE IF NOT EXISTS bot_{bot_id} (token TEXT, data TEXT, users TEXT, daily_users TEXT)")
@@ -37,7 +37,7 @@ async def write_bot_users(user_id, bot_id):  # типы данных str, str
     conn.close()
 
 
-async def get_amount_of_users(bot_id):
+async def get_amount_of_users(bot_id: int) -> (int, int) :
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
     users, daily_users = c.execute(f'SELECT COUNT(users), COUNT(daily_users) FROM bot_{bot_id}').fetchone()
@@ -46,7 +46,7 @@ async def get_amount_of_users(bot_id):
     return users, daily_users
 
 
-async def reboot_daily_users(bot_id):
+async def reboot_daily_users(bot_id: int) -> None:
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
     c.execute(f'UPDATE bot_{bot_id} SET daily_users = NULL')
@@ -55,7 +55,7 @@ async def reboot_daily_users(bot_id):
     conn.close()
 
 
-def get_working_bots_tokens():
+def get_working_bots_tokens() -> list:
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
     table_names = list(map(lambda el: el[0], c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()))
@@ -69,7 +69,7 @@ def get_working_bots_tokens():
     return working_bots
 
 
-async def get_all_bots_tokens():
+async def get_all_bots_tokens() -> list:
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
     table_names = list(map(lambda el: el[0], c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()))
@@ -83,7 +83,7 @@ async def get_all_bots_tokens():
     return all_bots_tokens
 
 
-async def reboot_daily_users_in_all_bots():
+async def reboot_daily_users_in_all_bots() -> None:
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
     bots_ids = list(map(lambda el: el[0].split('_')[1], c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()))
@@ -93,7 +93,7 @@ async def reboot_daily_users_in_all_bots():
     conn.close()
 
 
-async def delete_bot(bot_token):
+async def delete_bot(bot_token: str) -> None:
     bot_id = bot_token.split(':')[0]
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
@@ -102,8 +102,7 @@ async def delete_bot(bot_token):
     c.close()
     conn.close()
 
-
-async def start_or_stop_bot(bot_token, isworking):
+async def start_or_stop_bot(bot_token: str, isworking: bool) -> None:
     try:
         bot_id = bot_token.split(':')[0]
         conn = sqlite3.connect('./data/databases/bots.sqlite3')
@@ -118,7 +117,7 @@ async def start_or_stop_bot(bot_token, isworking):
         pass
 
 
-async def isworking(bot_token, user_id):
+async def isworking(bot_token: str, user_id: int):
     try:
         bot_id = bot_token.split(':')[0]
         conn = sqlite3.connect('./data/databases/bots.sqlite3')
@@ -133,7 +132,7 @@ async def isworking(bot_token, user_id):
 
 
 # непосредственно данные пользователей
-async def update_bot_data(user_id, bots_dict): # тип данных str, dict
+async def update_bot_data(user_id: str, bots_dict: dict) -> None:
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     c.execute(f'UPDATE {"user" + "_" + user_id} SET bots=?', (str(bots_dict),))
@@ -142,7 +141,7 @@ async def update_bot_data(user_id, bots_dict): # тип данных str, dict
     conn.close()
 
 
-async def get_bot_data(user_id):
+async def get_bot_data(user_id: int):
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     bots = c.execute(f'SELECT bots FROM {"user" + "_" + user_id}').fetchall()[0][0]
@@ -156,7 +155,7 @@ async def get_bot_data(user_id):
     return bots
 
 
-async def get_bot_token_by_id(bot_id):
+async def get_bot_token_by_id(bot_id: int) -> str:
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     try:
         c = conn.cursor()

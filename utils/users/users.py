@@ -5,7 +5,7 @@ from data.config import ADMINS
 from utils.bot.bots_worker import get_bot_token_by_id
 
 
-async def write_bot_token_and_admin_chat_id(chat_id, bot_id):
+async def write_bot_token_and_admin_chat_id(chat_id: int, bot_id: int) -> None:
     bot_token = await get_bot_token_by_id(bot_id)
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
@@ -26,7 +26,7 @@ async def get_bot_token_and_admin_chat_id():
     return data
 
 
-async def active_now(id_of_user, chat_id, bot_id):
+async def active_now(id_of_user: str, chat_id: int, bot_id: int) -> None:
     if id_of_user in ADMINS:
         await write_bot_token_and_admin_chat_id(chat_id, bot_id)
     conn = sqlite3.connect('./data/databases/users.sqlite3')
@@ -45,7 +45,7 @@ async def active_now(id_of_user, chat_id, bot_id):
     await write_bot_users(id_of_user, bot_id)
 
 
-async def is_new_user(user_id):
+async def is_new_user(user_id: int) -> bool:
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     res = c.execute(f'SELECT COUNT(id) FROM users WHERE id = {user_id}').fetchone()[0]

@@ -17,7 +17,7 @@ from threading import Thread
 
 
 
-async def chat_gpt_inline_buttons_handler(call: types.CallbackQuery, state: FSMContext, bot_instance: BotInfo):
+async def chat_gpt_inline_buttons_handler(call: types.CallbackQuery, state: FSMContext, bot_instance: BotInfo) -> None:
     if call.data == 'back_to_model_selection':
         dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_instance.bot_id, 2)
         dictionary_used_in_this_function['text_get_for_chat_gpt'] = False
@@ -25,7 +25,7 @@ async def chat_gpt_inline_buttons_handler(call: types.CallbackQuery, state: FSMC
         await chat_gpt_starter(call, bot_instance)
 
 
-async def get_chat_gpt_version(call: types.CallbackQuery, state: FSMContext, bot_instance: BotInfo):
+async def get_chat_gpt_version(call: types.CallbackQuery, state: FSMContext, bot_instance: BotInfo) -> None:
     Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_instance.bot_id])).start()
     dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_instance.bot_id, 2)
     if 'gpt-' in call.data:

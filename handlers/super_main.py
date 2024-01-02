@@ -41,7 +41,7 @@ from handlers.bot import BotInfo
 tokens = {}
 
 
-async def stop_bot(bot_token):
+async def stop_bot(bot_token: str) -> None:
     try:
         tokens[bot_token]['thread'].join(0.01)
         tokens[bot_token]['dp'].stop_polling()
@@ -49,7 +49,7 @@ async def stop_bot(bot_token):
         pass
 
 
-async def start_bot(dp, bot_token):
+async def start_bot(dp: Dispatcher, bot_token: str) -> None:
     while dp.is_polling():
         pass
     while True:
@@ -65,14 +65,14 @@ async def start_bot(dp, bot_token):
             await asyncio.sleep(7)
 
 
-async def skip_updates_and_start_bot(dp, bot_token):
+async def skip_updates_and_start_bot(dp: Dispatcher, bot_token: str) -> None:
     if len(working_bots_tokens) > 1:
         event_loop.create_task(start_bot(dp, bot_token))
     elif len(working_bots_tokens) == 1:
         Thread(target=async_functions_process_starter, args=(start_bot, [dp, bot_token])).start()
 
 
-def bot_init(token):
+def bot_init(token: str) -> None:
     global on_processing_advertisements_payments
     bot = Bot(token=token)
     bot_telebot = TeleBot(token=token, parse_mode=None)
@@ -85,10 +85,10 @@ def bot_init(token):
 
     # handler отвечающий за нажатие кнопки "старт" или комманды '/start'
     @dp.message_handler(state='*', commands=['start'])
-    async def start_handler(message: types.Message):
+    async def start_handler(message: types.Message) -> None:
         await start(message, bot_instance)
 
-    async def check_ads_message_buttons_call(call):
+    async def check_ads_message_buttons_call(call) -> bool:
         if 'pass_moderation_' in call.data or 'reject_moderation_' in call.data:
             await pass_or_reject_moderation(call)
             return True
@@ -131,7 +131,7 @@ def bot_init(token):
 
     # это handler, отвечающий за обработку всех Callback кнопок, связанных с gdz
     @dp.callback_query_handler(lambda call: True, state=UserState.find_solution)
-    async def gdz_inline_buttons_hundler(call: types.CallbackQuery, state: FSMContext = None):
+    async def gdz_inline_buttons_hundler(call: types.CallbackQuery, state: FSMContext = None) -> None:
         if await check_ads_message_buttons_call(call):
             return
         if call.data == 'bookmarks':
@@ -140,7 +140,7 @@ def bot_init(token):
             await gdz_main_function(call, bot_instance, state=state)
 
     @dp.message_handler(state=[UserState.chat_gpt_writer], content_types=['text', 'voice', 'photo'])
-    async def gpt_task_handler(message: types.Message):
+    async def gpt_task_handler(message: types.Message) -> None:
         if message.text == '/statistics':
             await statistics(message)
         elif message.text == '/bookmarks':
@@ -149,24 +149,24 @@ def bot_init(token):
             await chat_gpt_task_handler(message, bot_instance)
 
     @dp.callback_query_handler(state=UserState.chat_gpt_writer)
-    async def gpt_inline_buttons_handler(call: types.CallbackQuery, state: FSMContext):
+    async def gpt_inline_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
         await chat_gpt_inline_buttons_handler(call, state, bot_instance)
 
     @dp.callback_query_handler(state=UserState.chat_gpt_worker)
-    async def get_gpt_version(call: types.CallbackQuery, state: FSMContext):
+    async def get_gpt_version(call: types.CallbackQuery, state: FSMContext) -> None:
         await get_chat_gpt_version(call, state, bot_instance)
 
     @dp.message_handler(state=[UserState.chat_gpt_worker], content_types=['text'])
-    async def gpt_messages_handler(message: types.Message):
+    async def gpt_messages_handler(message: types.Message) -> None:
         await chat_gpt_messages_handler(message, bot_instance)
 
     @dp.message_handler(state='*', commands=['chat_gpt'])
-    async def gpt_starter(message):
+    async def gpt_starter(message) -> None:
         await chat_gpt_starter(message, bot_instance)
 
     # это функция, отвечающая за открытие закладок
     @dp.message_handler(state='*', commands=['bookmarks'])
-    async def get_bookmarks(message):
+    async def get_bookmarks(message) -> None:
         if isinstance(message, types.Message):
             Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
         else:
@@ -210,7 +210,7 @@ def bot_init(token):
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.callback_query_handler(state=UserState.bookmark_working)
-    async def get_bookmark(call: types.CallbackQuery, state: FSMContext):
+    async def get_bookmark(call: types.CallbackQuery, state: FSMContext) -> None:
         if await check_ads_message_buttons_call(call):
             return
         try:
@@ -235,7 +235,7 @@ def bot_init(token):
             pass
 
     @dp.callback_query_handler(state=UserState.bookmark_opening)
-    async def bookmark_opening(call: types.CallbackQuery, state: FSMContext):
+    async def bookmark_opening(call: types.CallbackQuery, state: FSMContext) -> None:
         if await check_ads_message_buttons_call(call):
             return
         try:
@@ -290,7 +290,7 @@ def bot_init(token):
 
     # handler, отвечающий за ввод имени закладки
     @dp.message_handler(state=UserState.bookmark_creation, content_types=['text'])
-    async def get_name_of_bookmark(message: types.Message, state: FSMContext):
+    async def get_name_of_bookmark(message: types.Message, state: FSMContext) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
         dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
         users_data = await get_dictionary(str(message.from_user.id), bot_id, 1)
@@ -344,7 +344,7 @@ def bot_init(token):
         await UserState.find_solution.set()
         await state.reset_state(with_data=True)
 
-    async def my_account_starter(message):
+    async def my_account_starter(message) -> None:
         if isinstance(message, types.Message):
             chat_id = message.chat.id
         else:
@@ -405,7 +405,7 @@ def bot_init(token):
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.callback_query_handler(lambda call: True, state=UserState.my_account)
-    async def my_account_buttons_handler(call: types.CallbackQuery, state: FSMContext = FSMContext):
+    async def my_account_buttons_handler(call: types.CallbackQuery, state: FSMContext = FSMContext) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
         if await check_ads_message_buttons_call(call):
             return
@@ -550,7 +550,7 @@ def bot_init(token):
             await UserState.on_pro.set()
             Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
-    async def check_payment_by_button(call: types.CallbackQuery, type_of_purchase):
+    async def check_payment_by_button(call: types.CallbackQuery, type_of_purchase: int) -> None:
         if await check_payment(call.data[6:]):
             if type_of_purchase == 1:
                 try:
@@ -581,7 +581,7 @@ def bot_init(token):
                 pass
 
     @dp.callback_query_handler(lambda call: True, state=UserState.on_pro)
-    async def buy_pro_buttons_handler(call: types.CallbackQuery, state: FSMContext):
+    async def buy_pro_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
         if await check_ads_message_buttons_call(call):
             return
         dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
@@ -623,7 +623,7 @@ def bot_init(token):
         elif 'check' in call.data:
             await check_payment_by_button(call, 2)
 
-    async def show_bot_short_information(chat_id, user_id, bot_token):
+    async def show_bot_short_information(chat_id: int, user_id: int, bot_token: str) -> None:
         dictionary_used_in_this_function = await get_dictionary(str(user_id), bot_id, 2)
         users_data = await get_dictionary(str(user_id), bot_id, 1)
         users_bot_info = await get_bot_info(bot_token)
@@ -660,14 +660,14 @@ def bot_init(token):
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(user_id), bot_id, str(users_data), 1])).start()
 
     @dp.callback_query_handler(lambda call: True, state=UserState.new_bot_creation)
-    async def new_bot_creation_cancellation_handler(call: types.CallbackQuery, state: FSMContext = None):
+    async def new_bot_creation_cancellation_handler(call: types.CallbackQuery, state: FSMContext = None) -> None:
         if await check_ads_message_buttons_call(call):
             return
         await UserState.my_account.set()
         await my_account_buttons_handler(call, state)
 
     @dp.message_handler(state=UserState.new_bot_creation, content_types=['text'])
-    async def new_bot_token_getting_handler(message: types.Message, state: FSMContext):
+    async def new_bot_token_getting_handler(message: types.Message, state: FSMContext) -> None:
         if message.text == '↩ Назад в главное меню' or message.text in MAIN_COMMANDS:
             await command_handler(message, state)
         else:
@@ -677,7 +677,7 @@ def bot_init(token):
             bots_info = await check_bot_token(new_bot_token)
             if bots_info['ok']:
                 if new_bot_token not in await get_all_bots_tokens():
-                    Thread(target=delete_messages, args=(1, message.chat.id, message.message_id, None)).start()
+                    Thread(target=delete_messages, args=(1, message.chat.id, message.message_id, None, bot_telebot)).start()
                     await update_or_create_bot_data(new_bot_token, str({'amount_of_unauthorized_errors': 0,
                                                                         'isworking': True}), str(message.from_user.id))
                     bot_init(new_bot_token)
@@ -702,14 +702,14 @@ def bot_init(token):
                 else:
                     x = await bot.send_message(chat_id=message.chat.id,
                                                text='🟡 Этот бот уже был добавлен.')
-                    Thread(target=delete_messages, args=(3, message.chat.id, message.message_id, x.message_id)).start()
+                    Thread(target=delete_messages, args=(3, message.chat.id, message.message_id, x.message_id, bot_telebot)).start()
             else:
                 x = await bot.send_message(chat_id=message.chat.id,
                                            text='🛑 Токен бота или некорректен или бот уже подключен к другому обработчику! Пожалуйста, или введите корректный токен или отключите бота от другого обработчика.\n\n_Вы всегда можете проверить правильность токена бота в @BotFather_',
                                            parse_mode='markdown')
-                Thread(target=delete_messages, args=(4, message.chat.id, message.message_id, x.message_id)).start()
+                Thread(target=delete_messages, args=(4, message.chat.id, message.message_id, x.message_id, bot_telebot)).start()
 
-    async def advertisement_cabinet_starter(message: types.Message):
+    async def advertisement_cabinet_starter(message: types.Message) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
         back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
@@ -717,7 +717,7 @@ def bot_init(token):
         await UserState.advertisement_cabinet.set()
         await advertisement_cabinet(message)
 
-    async def advertisement_cabinet(message):
+    async def advertisement_cabinet(message: types.Message) -> None:
         dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
         markup = types.InlineKeyboardMarkup()
         for button_data in [['➕ Создать объявление', 'create_ads'],
@@ -742,7 +742,7 @@ def bot_init(token):
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.callback_query_handler(lambda call: True, state=UserState.advertisement_cabinet)
-    async def advertisement_cabinet_buttons_handler(call: types.CallbackQuery, state: FSMContext):
+    async def advertisement_cabinet_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
         if await check_ads_message_buttons_call(call):
             return
@@ -753,7 +753,7 @@ def bot_init(token):
             await UserState.manage_advertisements.set()
             await view_orders(call)
 
-    async def view_orders(call: types.CallbackQuery):
+    async def view_orders(call: types.CallbackQuery) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
         dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
         users_data = await get_dictionary(str(call.from_user.id), bot_id, 1)
@@ -796,7 +796,7 @@ def bot_init(token):
             Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     async def view_ads_info(call: types.CallbackQuery, is_admin=False,
-                            previous_call_data='back_to_manage_advertisements'):
+                            previous_call_data: str='back_to_manage_advertisements') -> None:
         dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
         ads_info = await get_ads_data(call.data)
         markup = types.InlineKeyboardMarkup()
@@ -818,7 +818,7 @@ def bot_init(token):
         dictionary_used_in_this_function['id_of_message_with_markup'] = message_id
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
-    async def process_payments():
+    async def process_payments() -> None:
         global on_processing_advertisements_payments
         while True:
             all_payments_data = get_all_payments_data()
@@ -846,7 +846,7 @@ def bot_init(token):
                 on_processing_advertisements_payments = False
                 return
 
-    async def pay_ads(call: types.CallbackQuery):
+    async def pay_ads(call: types.CallbackQuery) -> None:
         global on_processing_advertisements_payments
         await UserState.ads_buying.set()
         ads_id = call.data.split('_')[1]
@@ -881,7 +881,7 @@ def bot_init(token):
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.callback_query_handler(lambda call: True, state=UserState.ads_buying)
-    async def ads_buying_buttons_handler(call: types.CallbackQuery, state: FSMContext):
+    async def ads_buying_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
         if await check_ads_message_buttons_call(call):
             return
@@ -889,7 +889,7 @@ def bot_init(token):
             await check_payment_by_button(call, 1)
 
     @dp.callback_query_handler(lambda call: True, state=UserState.manage_advertisements)
-    async def view_orders_buttons_handler(call: types.CallbackQuery, state: FSMContext):
+    async def view_orders_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
         if await check_ads_message_buttons_call(call):
             return
@@ -902,7 +902,7 @@ def bot_init(token):
         elif 'ads_ids' in users_data and int(call.data) in users_data['ads_ids']:
             await view_ads_info(call)
 
-    async def buy_advertisements(call: types.CallbackQuery, on_edit=False):
+    async def buy_advertisements(call: types.CallbackQuery, on_edit: bool=False) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
         dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
         dictionary_used_in_this_function['own-quantity'] = False
@@ -936,7 +936,7 @@ def bot_init(token):
 
     @dp.callback_query_handler(lambda call: True,
                                state=[UserState.advertisement_watching, UserState.on_ads_text_getting])
-    async def buy_advertisement_buttons_handler(call: types.CallbackQuery, state: FSMContext):
+    async def buy_advertisement_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
         if await check_ads_message_buttons_call(call):
             return
         elif 'own-quantity' in call.data:
@@ -982,7 +982,7 @@ def bot_init(token):
             if 'id_of_wrong_ads_texts_messages' in dictionary_used_in_this_function and \
                     dictionary_used_in_this_function['id_of_wrong_ads_texts_messages']:
                 Thread(target=delete_messages,
-                       args=(0, *dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'])).start()
+                       args=(0, *dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'], bot_telebot)).start()
             await buy_advertisements(call, True)
         elif ('+' in call.data or '-' in call.data) and call.data.split('_')[0][2:].isdigit():
             Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
@@ -1034,7 +1034,7 @@ def bot_init(token):
             if 'id_of_wrong_ads_texts_messages' in dictionary_used_in_this_function and \
                     dictionary_used_in_this_function['id_of_wrong_ads_texts_messages']:
                 Thread(target=delete_messages,
-                       args=(0, *dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'])).start()
+                       args=(0, *dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'], bot_telebot)).start()
             if 'ads' in call.data:
                 dictionary_used_in_this_function['quantity_of_watches'] = int(call.data.split('-')[1])
                 dictionary_used_in_this_function['price'] = int(call.data.split('-')[2].split('_')[0])
@@ -1082,7 +1082,7 @@ def bot_init(token):
             if 'id_of_wrong_ads_texts_messages' in dictionary_used_in_this_function and \
                     dictionary_used_in_this_function['id_of_wrong_ads_texts_messages']:
                 Thread(target=delete_messages,
-                       args=(0, *dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'])).start()
+                       args=(0, *dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'], bot_telebot)).start()
             users_data = await get_dictionary(str(call.from_user.id), bot_id, 1)
 
             id_of_ads = await create_ads(call.from_user.id, call.message.chat.id, token,
@@ -1118,7 +1118,7 @@ def bot_init(token):
             Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(users_data), 1])).start()
 
     @dp.message_handler(state=UserState.on_ads_text_getting, content_types=['text'])
-    async def get_ads_text(message: types.Message, state: FSMContext):
+    async def get_ads_text(message: types.Message, state: FSMContext) -> None:
         if message.text == '↩ Назад в главное меню' or message.text in MAIN_COMMANDS:
             await command_handler(message, state)
         else:
@@ -1126,7 +1126,7 @@ def bot_init(token):
             if 'id_of_wrong_ads_texts_messages' in dictionary_used_in_this_function and \
                     dictionary_used_in_this_function['id_of_wrong_ads_texts_messages']:
                 Thread(target=delete_messages,
-                       args=(0, *dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'])).start()
+                       args=(0, *dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'], bot_telebot)).start()
             if len(message.text) > 170:
                 x = await bot.send_message(chat_id=message.chat.id,
                                            text='🛑 Рекламное сообщение слишком длинное! Максимальная длина - 170 символов.')
@@ -1163,7 +1163,7 @@ def bot_init(token):
                 dictionary_used_in_this_function['on_ads_text_getting'] = False
             Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
-    async def pass_or_reject_moderation(call: types.CallbackQuery, update_ads_info_message=False):
+    async def pass_or_reject_moderation(call: types.CallbackQuery, update_ads_info_message: bool=False) -> None:
         dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
         ads_id = int(call.data.split('_')[2])
         if 'pass' in call.data:
@@ -1199,7 +1199,7 @@ def bot_init(token):
             except Exception:
                 pass
 
-    async def for_developers(message):
+    async def for_developers(message) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
         back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
@@ -1226,7 +1226,7 @@ def bot_init(token):
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.callback_query_handler(lambda call: True, state=UserState.for_developers)
-    async def for_developers_buttons_handler(call: types.CallbackQuery, state: FSMContext):
+    async def for_developers_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
         dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
         if call.data == 'ads_orders':
             markup = types.InlineKeyboardMarkup()
@@ -1297,7 +1297,7 @@ def bot_init(token):
             await pass_or_reject_moderation(call, True)
 
     @dp.callback_query_handler(lambda call: True, state='*')
-    async def all_buttons_handler(call: types.CallbackQuery, state: FSMContext = None):
+    async def all_buttons_handler(call: types.CallbackQuery, state: FSMContext = None) -> None:
         if await check_ads_message_buttons_call(call):
             return
         dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
@@ -1388,14 +1388,14 @@ def bot_init(token):
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.message_handler(state='*', commands=['statistics'])
-    async def statistics(message: types.message):
+    async def statistics(message: types.message) -> None:
         await UserState.find_solution.set()
         await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id, chat_id=message.chat.id,
                            text=await check_amount_of_users(message, bot_id),
                            reply_markup=await get_reply_markup_for_user(message.from_user.id))
 
     @dp.message_handler(state='*', commands=['my_account'])
-    async def my_account(message: types.Message):
+    async def my_account(message: types.Message) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
         back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
@@ -1404,7 +1404,7 @@ def bot_init(token):
         await UserState.my_account.set()
 
     @dp.message_handler(state='*', commands=['gift'])
-    async def gift_pro_starter(message: types.Message):
+    async def gift_pro_starter(message: types.Message) -> None:
         user_data = message.get_args()
         try:
             user_id, months = list(map(int, user_data.split(' ')))
@@ -1418,7 +1418,7 @@ def bot_init(token):
                                        text='⭐️ Пришли данные того, кому хочешь подарить PRO подписку. В формате "id количество месяцев"')
 
     @dp.message_handler(state=UserState.on_gifting_pro)
-    async def gift_pro(message: types.Message, user_id=None, months=None):
+    async def gift_pro(message: types.Message, user_id: bool=None, months: bool=None) -> None:
         try:
             if not user_id or not months:
                 user_id, months = list(map(int, message.text.split()[:2]))
@@ -1432,7 +1432,7 @@ def bot_init(token):
                                    text=f'❌ Не удалось подарить подписку. Попробуй еще раз! Возникла ошибка "{e}".')
 
     @dp.message_handler(state='*', commands=['unsubscribe'])
-    async def unsubscribe_from_pro_starter(message: types.Message):
+    async def unsubscribe_from_pro_starter(message: types.Message) -> None:
         try:
             user_id = int(message.get_args())
             await unsubscribe_from_pro(message, user_id)
@@ -1445,7 +1445,7 @@ def bot_init(token):
                                        text='🚫 Пришли id того, у кого хочешь отобрать подписку.')
 
     @dp.message_handler(state=UserState.on_unsubscribing_pro)
-    async def unsubscribe_from_pro(message: types.Message, user_id: int = None):
+    async def unsubscribe_from_pro(message: types.Message, user_id: int = None) -> None:
         try:
             if user_id is None:
                 user_id = int(message.text)
@@ -1477,7 +1477,7 @@ def bot_init(token):
     @dp.message_handler(state=[UserState.find_solution, UserState.chat_gpt_writer, UserState.bookmark_working,
                                UserState.bookmark_opening, UserState.bookmark_creation, None],
                         content_types=['text', 'voice', 'photo'])
-    async def command_handler(message: types.Message, state: FSMContext):
+    async def command_handler(message: types.Message, state: FSMContext) -> None:
         await state.reset_state(with_data=True)
         dictionary_to_use_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
         if 'text_inputed' in dictionary_to_use_in_this_function and 'bookmark_dict' in \
@@ -1586,7 +1586,7 @@ def bot_init(token):
                         pass
 
     @dp.message_handler(state='*', content_types=['text'])
-    async def handle_stupid_message(message: types.Message, state: FSMContext):
+    async def handle_stupid_message(message: types.Message, state: FSMContext) -> None:
         if message.text == '↩ Назад в главное меню':
             await command_handler(message, state)
         else:

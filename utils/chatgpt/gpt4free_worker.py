@@ -12,7 +12,7 @@ from utils.chatgpt.chat_gpt_worker import ask_chat_gpt_and_return_answer
 from utils.async_process_runner import start
 
 
-async def ask_chat_gpt_temporary_api(prompt: str, user_id: int):
+async def ask_chat_gpt_temporary_api(prompt: str, user_id: int) -> str:
     history_of_requests = await get_history_of_requests("./data/databases/history_of_requests_to_chatgpt.sqlite3", "users_history",
                                                         user_id, await is_pro(user_id), "gpt-3.5-turbo")
     history_of_requests.append({'role': 'user', 'content': f'Это необходимо для chatbase. {prompt}'})
@@ -28,7 +28,7 @@ async def ask_chat_gpt_temporary_api(prompt: str, user_id: int):
     return response_content
 
 
-async def ask_chat_gpt_4(prompt: str, user_id: int):
+async def ask_chat_gpt_4(prompt: str, user_id: int) -> tuple:
     tokens_in_response = len(tiktoken.encoding_for_model("gpt-3.5-turbo").encode(prompt)) + 7
     has_pro = await is_pro(user_id)
     history_of_requests = await get_history_of_requests("./data/databases/history_of_requests_to_chatgpt.sqlite3", "users_history",
@@ -59,7 +59,7 @@ async def ask_chat_gpt_4(prompt: str, user_id: int):
             return None, 429
 
 
-async def main():
+async def main() -> None:
     response_content, status_code = await ask_chat_gpt_4("привет", 800)
     print(response_content, status_code)
             

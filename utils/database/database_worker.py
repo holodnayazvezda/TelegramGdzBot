@@ -1,7 +1,7 @@
 import sqlite3
 
 
-async def get_information_from(db_name, tablename, coloumn, id=None):
+async def get_information_from(db_name: str, tablename: str, coloumn: str, id: str=None):
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     if id:

@@ -8,7 +8,7 @@ from math import ceil
 
 
 # это функция, отвечающая за формирование валидного словаря всех номеров
-async def producer(spisok, call, bot_id: int):
+async def producer(spisok, call, bot_id: int) -> dict:
     if not isinstance(spisok, dict):
         return spisok
     dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
@@ -36,7 +36,7 @@ async def producer(spisok, call, bot_id: int):
     
 
 # функция для обрезки массива с кнопками, сделана для того, чтобы избежать ошибки tg api
-async def buttons_validator(buttons):
+async def buttons_validator(buttons: list) -> list:
     if len(buttons) > 98:
         buttons = buttons[:98]
     return buttons

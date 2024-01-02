@@ -16,7 +16,7 @@ from handlers.bot import BotInfo
 from handlers.start.start_handler import start
 
 
-async def chat_gpt_messages_handler(message: types.Message, bot_instance: BotInfo):
+async def chat_gpt_messages_handler(message: types.Message, bot_instance: BotInfo) -> None:
     if message.text == '↩ Назад в главное меню':
         await start(message, bot_instance)
     elif message.text == '🗑 Очистить историю диалога':
@@ -25,7 +25,7 @@ async def chat_gpt_messages_handler(message: types.Message, bot_instance: BotInf
         await generate_and_send_answer(message.chat.id, message.from_user.id, message.text)
 
 
-async def chat_gpt_starter(message, bot_instance: BotInfo):
+async def chat_gpt_starter(message: types.Message, bot_instance: BotInfo) -> None:
     if isinstance(message, types.Message):
         chat_id = message.chat.id
     else:
@@ -79,7 +79,7 @@ async def chat_gpt_starter(message, bot_instance: BotInfo):
     await UserState.chat_gpt_worker.set()
 
 
-async def chat_gpt_task_handler(message: types.Message, bot_instance: BotInfo):
+async def chat_gpt_task_handler(message: types.Message, bot_instance: BotInfo) -> None:
     dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_instance.bot_id, 2)
     if message.text == '↩ Назад в главное меню':
         await start(message, bot_instance)

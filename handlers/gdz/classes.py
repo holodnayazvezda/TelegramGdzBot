@@ -11,7 +11,7 @@ from handlers.bot import BotInfo
 from threading import Thread
 
 # это функция начало гдз. Отсюда начнется первый выбор класса, первая печать InlineKeyboardButtonS
-async def gdz_starter(message: types.Message, bot_instance: BotInfo):
+async def gdz_starter(message: types.Message, bot_instance: BotInfo) -> None:
     users_dict = await get_dictionary(str(message.from_user.id), bot_instance.bot_id, 2)
     if users_dict:
         if isinstance(message, types.Message):

@@ -7,7 +7,7 @@ from utils.database.folder_worker import get_dictionary, create_or_dump_user
 from utils.chatgpt.chat_gpt_users_worker import get_amount_of_referrals
 
 
-async def is_pro(user_id):
+async def is_pro(user_id: int) -> bool:
     if str(user_id) in ADMINS:
         return True
     try:
@@ -26,7 +26,7 @@ async def is_pro(user_id):
     return False
 
 
-async def set_pro_for_user(user_id: int, months: int, chat_id, bot_token):
+async def set_pro_for_user(user_id: int, months: int, chat_id: int, bot_token: str) -> None:
     if not await is_pro(user_id):
         users_data = await get_dictionary(str(user_id), None, 1)
         if 'have_had_pro' not in users_data:
@@ -75,7 +75,7 @@ async def set_pro_for_user(user_id: int, months: int, chat_id, bot_token):
             pass
 
 
-async def unsubscribe_users_from_pro(date_now: str):
+async def unsubscribe_users_from_pro(date_now: str) -> None:
     conn = sqlite3.connect('./data/databases/pro_users.sqlite3')
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS pro_users_data (id INTEGER, creation_date TEXT, months INTEGER, expired_date TEXT, chat_id INTEGER, bot_token TEXT)')
@@ -97,7 +97,7 @@ async def unsubscribe_users_from_pro(date_now: str):
             pass
 
 
-async def get_the_rest_of_the_subscription_days(user_id: int):
+async def get_the_rest_of_the_subscription_days(user_id: int) -> tuple:
     conn = sqlite3.connect('./data/databases/pro_users.sqlite3')
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS pro_users_data (id INTEGER, creation_date TEXT, months INTEGER, expired_date TEXT, chat_id INTEGER, bot_token TEXT)')

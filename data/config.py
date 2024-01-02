@@ -25,7 +25,7 @@ COOKIES_FOR_GPT_4_BING_PRO_USERS = {"set-cookie": "MUIDB=3C770E47015963000FB21D8
 AMOUNT_OF_REFERRALS_FOR_PRO = 5
 
 
-async def get_buttons_list_for_user(user_id):
+async def get_buttons_list_for_user(user_id: int) -> list[str]:
     if str(user_id) in ADMINS:
         return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт', '📈 Статистика',
                 'ℹ️ Информация о боте', '🏟 Реклама', '💻 Для разработчиков', '👮 Для правообладателей контента',
@@ -34,7 +34,7 @@ async def get_buttons_list_for_user(user_id):
             'ℹ️ Информация о боте', '🏟 Реклама', '👮 Для правообладателей контента', '👨‍💻 Для пользователей']
 
 
-async def get_reply_markup_for_user(user_id):
+async def get_reply_markup_for_user(user_id: int) -> types.ReplyKeyboardMarkup:
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     buttons = []
     for btn_text in await get_buttons_list_for_user(user_id):
@@ -57,7 +57,7 @@ PRICES_FOR_ADS = {500: 25, 1000: 50, 10000: 475, 20000: 950, 100000: 4500}
 PRICES_FOR_PREMIUM = {'1 месяц': 100, '3 месяца': 250, '6 месяцев': 500}
 
 
-async def get_available_amount_of_bookmarks(id, have_had_premium, has_working_bots, amount_of_referrals):
+async def get_available_amount_of_bookmarks(id: int, have_had_premium: bool, has_working_bots: bool, amount_of_referrals: int) -> int:
     if str(id) in ADMINS:
         return 99
     else:
@@ -70,7 +70,7 @@ async def get_available_amount_of_bookmarks(id, have_had_premium, has_working_bo
         return min([99, min_amount_of_bookmarks + amount_of_referrals])
 
 
-async def get_max_tokens_in_response_for_user(has_pro: bool):
+async def get_max_tokens_in_response_for_user(has_pro: bool) -> int:
     max_tokens = PROMPT_FROM_USER_MAX_LENGTH
     if has_pro:
         max_tokens *= 2
@@ -78,7 +78,7 @@ async def get_max_tokens_in_response_for_user(has_pro: bool):
 
 
 async def get_available_amount_of_requests_to_chat_gpt(has_pro: bool, model: str, has_working_bots: bool,
-                                                       amount_of_referrals: int):
+                                                       amount_of_referrals: int) -> int:
     if model in ['gpt-4', 'gpt-4-bing']:
         if has_pro:
             return 50

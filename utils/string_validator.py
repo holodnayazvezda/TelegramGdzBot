@@ -1,7 +1,7 @@
 import re
 
 
-async def string_validator(string):
+async def string_validator(string: str) -> str:
     if len(string.encode('utf-8')) > 61:
         while len(string.encode('utf-8')) > 61:
             string = string[:-1]
@@ -9,7 +9,7 @@ async def string_validator(string):
     return string
 
 
-async def encoded_image_and_links_validator(image_list):
+async def encoded_image_and_links_validator(image_list: list) -> list:
     itog_list = []
     for i in range(len(image_list)):
         if 'https:' not in image_list[i] and 'megaresheba.ru/attachments' not in image_list[i]:
@@ -23,7 +23,7 @@ async def encoded_image_and_links_validator(image_list):
     return itog_list
 
 
-def contains_only_allowed_chars(input_string):
+def contains_only_allowed_chars(input_string: str) -> bool:
     pattern = r"""[^a-z A-Zа-яА-ЯёЁ0123456789.,!?;:^%|*&()$€₽£¥₺₴₸₿฿₵₡₢₣₲₴₾₤₣₰₣₳₢₭₮₱₲₥₦₩₫₯₠₣₹₨₮₱₪'"/\\s#~{}÷×+_-]"""
     matches = re.findall(pattern, input_string)
     return not bool(matches)

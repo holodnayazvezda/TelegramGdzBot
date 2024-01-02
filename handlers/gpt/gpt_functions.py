@@ -1,4 +1,4 @@
-from aiogram import Bot
+from aiogram import types
 
 from telebot.apihelper import ApiTelegramException
 from telebot import TeleBot
@@ -32,7 +32,7 @@ chats_ids_and_messages_for_chat_gpt_pro_users = {}
 on_processing_advertisements_payments = False
 
 
-def delete_messages(delay, chat_id, users_message_id, bots_message_id, bot_telebot: TeleBot):
+def delete_messages(delay, chat_id: int, users_message_id: int, bots_message_id: int, bot_telebot: TeleBot) -> None:
     time.sleep(delay)
     try:
         bot_telebot.delete_message(chat_id=chat_id, message_id=users_message_id)
@@ -45,7 +45,7 @@ def delete_messages(delay, chat_id, users_message_id, bots_message_id, bot_teleb
             pass
 
 
-async def unsuccessful_response_to_revchatgpt(chat_id, user_id, message_text, bot_instance: BotInfo):
+async def unsuccessful_response_to_revchatgpt(chat_id: int, user_id: int, message_text: str, bot_instance: BotInfo) -> None:
     try:
         response = await ask_chat_gpt_temporary_api(message_text, user_id)
         if response:
@@ -61,7 +61,7 @@ async def unsuccessful_response_to_revchatgpt(chat_id, user_id, message_text, bo
                                 text='🛑 Возникла ошибка при получении ответа! Повторите попытку через несколько минут.')
 
 
-async def generate_and_send_answer(chat_id, user_id, message_text, bot_instance: BotInfo):
+async def generate_and_send_answer(chat_id: int, user_id: int, message_text: str, bot_instance: BotInfo) -> None:
     bot_instance.bot_telebot.send_chat_action(chat_id=chat_id, action='typing')
     dictionary_used_in_this_function = await get_dictionary(str(user_id), bot_instance.bot_id, 2)
     try:
@@ -96,7 +96,7 @@ async def clear_chat_gpt_conversation(message, bot_instance: BotInfo):
     await bot_instance.bot.send_message(chat_id=message.chat.id, text="✅ История диалога с ChatGPT очищена")
 
 
-async def add_user_to_queue_and_start_generating(message, bot_instance: BotInfo):
+async def add_user_to_queue_and_start_generating(message: types.Message, bot_instance: BotInfo) -> None:
     global on_processing_chat_gpt_users, chats_ids_and_messages_for_chat_gpt_users, \
         on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
     dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_instance.bot_id, 2)
@@ -179,7 +179,7 @@ async def add_user_to_queue_and_start_generating(message, bot_instance: BotInfo)
         Thread(target=delete_messages, args=(20, message.chat.id, message.message_id, message_id, bot_instance.bot_telebot)).start()
 
 
-async def get_text_from_image_and_start_generating(message, filepath, model, bot_instance: BotInfo):
+async def get_text_from_image_and_start_generating(message: types.Message, filepath, model: str, bot_instance: BotInfo) -> None:
     global on_processing_chat_gpt_users, chats_ids_and_messages_for_chat_gpt_users, \
         on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
     amount_of_requests_to_ocr_api, amount_of_unsucessful_requests_to_ocr_api = await get_amount_of_requests_for_user(
@@ -233,7 +233,7 @@ async def get_text_from_image_and_start_generating(message, filepath, model, bot
                                                     parse_mode='markdown')
         Thread(target=delete_messages, args=(20, message.chat.id, message.message_id, message_id, bot_instance.bot_telebot)).start()
 
-async def translate_audio_to_text_and_start_generating(message, downloaded_message_file, has_pro, model, bot_instance: BotInfo):
+async def translate_audio_to_text_and_start_generating(message: types.Message, downloaded_message_file, has_pro: bool, model: str, bot_instance: BotInfo) -> None:
     global on_processing_chat_gpt_users, chats_ids_and_messages_for_chat_gpt_users, \
         on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
     voice_file_path_oga, voice_file_path_wav = None, None
@@ -291,7 +291,7 @@ async def translate_audio_to_text_and_start_generating(message, downloaded_messa
         Thread(target=delete_messages, args=(5, message.chat.id, message.message_id, message_id, bot_instance.bot_telebot)).start()
 
 
-async def process_chat_gpt_users(bot_instance: BotInfo):
+async def process_chat_gpt_users(bot_instance: BotInfo) -> None:
     global on_processing_chat_gpt_users, chats_ids_and_messages_for_chat_gpt_users
     while True:
         for chat_id, message_data in list(chats_ids_and_messages_for_chat_gpt_users.items()):
@@ -301,7 +301,7 @@ async def process_chat_gpt_users(bot_instance: BotInfo):
             on_processing_chat_gpt_users = False
             return
 
-async def process_chat_gpt_pro_users(bot_instance: BotInfo):
+async def process_chat_gpt_pro_users(bot_instance: BotInfo) -> None:
     global on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
     while True:
         for chat_id, message_data in list(chats_ids_and_messages_for_chat_gpt_pro_users.items()):

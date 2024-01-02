@@ -17,7 +17,7 @@ import redis
 client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 
-def delete_messages_by_timer(delay: float, bot_token: str, message1: types.Message, message2: types.Message = None):
+def delete_messages_by_timer(delay: float, bot_token: str, message1: types.Message, message2: types.Message = None) -> None:
     time.sleep(delay)
     bot_telebot = TeleBot(token=bot_token)
     if message2:
@@ -40,7 +40,7 @@ class ThrottlingMiddleware(BaseMiddleware):
         self.call_key_prefix = call_key_prefix
         super(ThrottlingMiddleware, self).__init__()
 
-    async def on_process_message(self, message: Message, data: dict):
+    async def on_process_message(self, message: Message, data: dict) -> None:
         is_banned = client.exists(str(message.from_user.id))
         if is_banned:
             raise CancelHandler()
@@ -51,7 +51,7 @@ class ThrottlingMiddleware(BaseMiddleware):
             await self.message_throttled(self, message, t)
             raise CancelHandler()
 
-    async def on_process_callback_query(self, callback_query: CallbackQuery, data: dict):
+    async def on_process_callback_query(self, callback_query: CallbackQuery, data: dict) -> None:
         is_banned = client.exists(str(callback_query.from_user.id))
         if is_banned:
             raise CancelHandler()
@@ -63,7 +63,7 @@ class ThrottlingMiddleware(BaseMiddleware):
             raise CancelHandler()
 
     @staticmethod
-    async def message_throttled(self, message: types.Message, throttled: Throttled):
+    async def message_throttled(self, message: types.Message, throttled: Throttled) -> None:
         if throttled.exceeded_count <= 2:
             message2 = None
             try:
@@ -83,7 +83,7 @@ class ThrottlingMiddleware(BaseMiddleware):
             await message.delete()
 
     @staticmethod
-    async def callback_query_throttled(self, callback_query: CallbackQuery, throttled: Throttled):
+    async def callback_query_throttled(self, callback_query: CallbackQuery, throttled: Throttled) -> None:
         if throttled.exceeded_count <= 2:
             try:
                 await callback_query.answer(f"Cлишком много запросов, повторите через {floor(self.call_limit)} секунду(ы)!")
