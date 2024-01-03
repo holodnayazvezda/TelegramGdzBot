@@ -24,6 +24,6 @@ async def encoded_image_and_links_validator(image_list: list) -> list:
 
 
 def contains_only_allowed_chars(input_string: str) -> bool:
-    pattern = r"""[^a-z A-Zа-яА-ЯёЁ0123456789.,!?;:^%|*&()$€₽£¥₺₴₸₿฿₵₡₢₣₲₴₾₤₣₰₣₳₢₭₮₱₲₥₦₩₫₯₠₣₹₨₮₱₪'"/\\s#~{}÷×+_-]"""
+    pattern = r"""[^a-z A-Zа-яА-ЯёЁ0123456789.,!?;:^%|*&()$€₽£¥₺₴₸₿฿₵₡₢₣₲₴₾₤₣₰₣₳₢₭₮₱₲₥₦₩₫₯₠₣₹₨₮₱₪'"/\\s#~{}÷×+_@-]"""
     matches = re.findall(pattern, input_string)
     return not bool(matches)

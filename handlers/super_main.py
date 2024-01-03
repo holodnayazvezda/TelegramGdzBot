@@ -1138,7 +1138,7 @@ def bot_init(token: str) -> None:
                 dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'] = [message.chat.id,
                                                                                       message.message_id,
                                                                                       x.message_id]
-            elif not contains_only_allowed_chars(message.text):
+            elif not contains_only_allowed_chars(message.text) and message.from_user.id not in ADMINS:
                 x = await bot.send_message(chat_id=message.chat.id,
                                            text='🛑 Текст рекламного сообщения содержит недопустимые символы!')
                 dictionary_used_in_this_function['id_of_wrong_ads_texts_messages'] = [message.chat.id,
