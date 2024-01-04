@@ -53,7 +53,6 @@ async def ask_chat_gpt_and_return_answer(model: str, prompt: str, user_id: int, 
                                                                                   table_name, user_id])).start()
         return response_content.replace('ShuttleAi', 'ReshenijaBotAi').replace("ShuttleAI", "ReshenijaBotAi").replace("\\n", "").strip(), 200
     except Exception as e:
-        print(e)
         if 'gpt-4' in model:
             return await ask_chat_gpt_and_return_answer('gpt-3.5-turbo', prompt, user_id)
         if 'exceeded' in str(e) and 'quota' in str(e) and 'check' in str(e) and 'plan' in str(e):
