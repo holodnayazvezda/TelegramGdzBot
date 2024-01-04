@@ -16,7 +16,7 @@ from utils.chatgpt.apikeys_worker import counter_of_requests
 async def ask_chat_gpt_and_return_answer(model: str, prompt: str, user_id: int, recursion_len: int = 0) -> tuple:
     tokens_in_response = len(tiktoken.encoding_for_model("gpt-3.5-turbo").encode(prompt)) + 7
     global counter_of_requests
-    from apikeys_worker import OPENAI_API_KEYS, SHUTTLEAI_API_KEYS
+    from utils.chatgpt.apikeys_worker import OPENAI_API_KEYS, SHUTTLEAI_API_KEYS
     has_pro = await is_pro(user_id)
     history_of_requests = await get_history_of_requests("./data/databases/history_of_requests_to_chatgpt.sqlite3", "users_history",
                                                         user_id, has_pro, model)
