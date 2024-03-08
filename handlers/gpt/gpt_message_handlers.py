@@ -25,7 +25,7 @@ async def chat_gpt_messages_handler(message: types.Message, bot_instance: BotInf
         await generate_and_send_answer(message.chat.id, message.from_user.id, message.text)
 
 
-async def chat_gpt_starter(message: types.Message, bot_instance: BotInfo) -> None:
+async def chat_gpt_starter(message, bot_instance: BotInfo) -> None:
     if isinstance(message, types.Message):
         chat_id = message.chat.id
     else:

@@ -1,0 +1,11 @@
+setuptools~=68.2.0
+aiogram==2.25.2
+asyncio~=3.4.3
+requests~=2.31.0
+bs4~=0.0.1
+beautifulsoup4~=4.12.2
+openai==1.13.3
+tiktoken~=0.5.1
+g4f~=0.2.2.7
+YooMoney~=0.1.0
+redis~=5.0.1

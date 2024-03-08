@@ -20,8 +20,8 @@ HEADERS = {
 ADMINS = ['1071845329', '1925785299']
 MAIN_BUTTONS = ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт', '📊 Статистика',
                 'ℹ️ Информация о боте', '🏟 Реклама', '👮 Для правообладателей контента', '👨‍💻 Для пользователей']
-COOKIES_FOR_GPT_4_BING_USERS = {"set-cookie": "MUIDB=3C770E47015963000FB21D85000E62EB; expires=Sun, 01-Dec-2024 23:04:06 GMT; path=/; HttpOnly", "useragentreductionoptout": "A7kgTC5xdZ2WIVGZEfb1hUoNuvjzOZX3VIV/BA6C18kQOOF50Q0D3oWoAm49k3BQImkujKILc7JmPysWk3CSjwUAAACMeyJvcmlnaW4iOiJodHRwczovL3d3dy5iaW5nLmNvbTo0NDMiLCJmZWF0dXJlIjoiU2VuZEZ1bGxVc2VyQWdlbnRBZnRlclJlZHVjdGlvbiIsImV4cGlyeSI6MTY4NDg4NjM5OSwiaXNTdWJkb21haW4iOnRydWUsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="}
-COOKIES_FOR_GPT_4_BING_PRO_USERS = {"set-cookie": "MUIDB=3C770E47015963000FB21D85000E62EB; expires=Sat, 21-Dec-2024 21:57:35 GMT; path=/; HttpOnly", "useragentreductionoptout": "A7kgTC5xdZ2WIVGZEfb1hUoNuvjzOZX3VIV/BA6C18kQOOF50Q0D3oWoAm49k3BQImkujKILc7JmPysWk3CSjwUAAACMeyJvcmlnaW4iOiJodHRwczovL3d3dy5iaW5nLmNvbTo0NDMiLCJmZWF0dXJlIjoiU2VuZEZ1bGxVc2VyQWdlbnRBZnRlclJlZHVjdGlvbiIsImV4cGlyeSI6MTY4NDg4NjM5OSwiaXNTdWJkb21haW4iOnRydWUsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="}
+COOKIES_FOR_GPT_4_BING_USERS = {"set-cookie": "MUIDB=372BDD60E86A691C124CC95BE9C068E1; expires=Tue, 01-Apr-2025 21:21:26 GMT; path=/; HttpOnly", "useragentreductionoptout": "A7kgTC5xdZ2WIVGZEfb1hUoNuvjzOZX3VIV/BA6C18kQOOF50Q0D3oWoAm49k3BQImkujKILc7JmPysWk3CSjwUAAACMeyJvcmlnaW4iOiJodHRwczovL3d3dy5iaW5nLmNvbTo0NDMiLCJmZWF0dXJlIjoiU2VuZEZ1bGxVc2VyQWdlbnRBZnRlclJlZHVjdGlvbiIsImV4cGlyeSI6MTY4NDg4NjM5OSwiaXNTdWJkb21haW4iOnRydWUsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="}
+COOKIES_FOR_GPT_4_BING_PRO_USERS = {"set-cookie": "MUIDB=0D594B2AF1A56F192D2F5F11F0C96E55; expires=Tue, 01-Apr-2025 21:19:06 GMT; path=/; HttpOnly", "useragentreductionoptout": "A7kgTC5xdZ2WIVGZEfb1hUoNuvjzOZX3VIV/BA6C18kQOOF50Q0D3oWoAm49k3BQImkujKILc7JmPysWk3CSjwUAAACMeyJvcmlnaW4iOiJodHRwczovL3d3dy5iaW5nLmNvbTo0NDMiLCJmZWF0dXJlIjoiU2VuZEZ1bGxVc2VyQWdlbnRBZnRlclJlZHVjdGlvbiIsImV4cGlyeSI6MTY4NDg4NjM5OSwiaXNTdWJkb21haW4iOnRydWUsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="}
 AMOUNT_OF_REFERRALS_FOR_PRO = 5
 
 
@@ -79,11 +79,11 @@ async def get_max_tokens_in_response_for_user(has_pro: bool) -> int:
 
 async def get_available_amount_of_requests_to_chat_gpt(has_pro: bool, model: str, has_working_bots: bool,
                                                        amount_of_referrals: int) -> int:
-    if model in ['gpt-4', 'gpt-4-bing']:
+    if 'gpt-4' in model:
         if has_pro:
             return 50
         else:
-            amount_of_requests = 3
+            amount_of_requests = 5
             amount_of_requests += amount_of_referrals
             if has_working_bots:
                 amount_of_requests *= 2

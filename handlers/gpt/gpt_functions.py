@@ -8,7 +8,7 @@ from utils.async_process_runner import start as async_functions_process_starter
 from utils.database.folder_worker import get_dictionary, create_or_dump_user
 from utils.chatgpt.chat_gpt_users_worker import clear_history_of_requests
 from utils.pro.pro_subscription_worker import is_pro
-from utils.chatgpt.chat_gpt_users_worker import get_amount_of_referrals, get_has_working_bots 
+from utils.chatgpt.chat_gpt_users_worker import get_amount_of_referrals, get_has_working_bots
 from utils.chatgpt.chat_gpt_worker import get_amount_of_requests_for_user
 from utils.ocr.image_worker import get_text_from_image
 from utils.chatgpt.gpt4free_worker import ask_chat_gpt_temporary_api, ask_chat_gpt_4
@@ -45,13 +45,12 @@ def delete_messages(delay, chat_id: int, users_message_id: int, bots_message_id:
             pass
 
 
-async def unsuccessful_response_to_revchatgpt(chat_id: int, user_id: int, message_text: str, bot_instance: BotInfo) -> None:
+async def unsuccessful_request_to_chatgpt(chat_id: int, user_id: int, message_text: str, bot_instance: BotInfo) -> None:
     try:
         response = await ask_chat_gpt_temporary_api(message_text, user_id)
         if response:
-            bot_message_text = f'⚠️ Возникли проблемы с получением ответа от основной системы. Это ответ резервного api, модель - *gpt-3.5-turbo*:\n\n{response}'
             send_message_by_telebot(user_id=user_id, bot_telebot=bot_instance.bot_telebot, bot_id=bot_instance.bot_id, chat_id=chat_id,
-                                    text=bot_message_text,
+                                    text=response,
                                     parse_mode='markdown')
         else:
             raise Exception('The answer is empty')
@@ -84,9 +83,9 @@ async def generate_and_send_answer(chat_id: int, user_id: int, message_text: str
                                         text="⚠️ Ваш запрос слишком длинный! Пожалуйста, сократите запрос, что бы бот смог обработать его.",
                                         parse_mode='markdown')
             else:
-                await unsuccessful_response_to_revchatgpt(chat_id, user_id, message_text, bot_instance)
+                await unsuccessful_request_to_chatgpt(chat_id, user_id, message_text, bot_instance)
     except Exception:
-        await unsuccessful_response_to_revchatgpt(chat_id, user_id, message_text, bot_instance)
+        await unsuccessful_request_to_chatgpt(chat_id, user_id, message_text, bot_instance)
 
 
 async def clear_chat_gpt_conversation(message, bot_instance: BotInfo):

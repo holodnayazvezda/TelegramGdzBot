@@ -4,8 +4,6 @@ import sqlite3
 def get_tablename_by_provider(provider: int) -> str:
     if provider == 1:
         return 'OPENAI'
-    elif provider == 2:
-        return 'SHUTTLEAI'
 
 
 def get_working_api_keys(provider: int) -> list[str]:
@@ -36,11 +34,9 @@ async def add_api_key(provider: int, email: str, password: str, api_key: str, ex
 
 
 OPENAI_API_KEYS = get_working_api_keys(1)
-SHUTTLEAI_API_KEYS = get_working_api_keys(2)
 counter_of_requests = 0
 
 
 async def update_api_keys() -> None:
-    global OPENAI_API_KEYS, SHUTTLEAI_API_KEYS
+    global OPENAI_API_KEYS
     OPENAI_API_KEYS = get_working_api_keys(1)
-    SHUTTLEAI_API_KEYS = get_working_api_keys(2)
