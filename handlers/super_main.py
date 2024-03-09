@@ -342,12 +342,17 @@ def bot_init(token: str) -> None:
             chat_id = message.message.chat.id
         Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), chat_id, bot_id])).start()
         dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton(text='🤖 Мои боты', callback_data='my_bots'))
-        markup.add(types.InlineKeyboardButton(text='👥 Мои рефералы', callback_data='my_referrals'))
         has_pro = await is_pro(message.from_user.id)
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        markup.add(types.InlineKeyboardButton(text='🤖 Мои боты', callback_data='my_bots'), types.InlineKeyboardButton(text='👥 Мои рефералы', callback_data='my_referrals'))
         if not has_pro:
-            markup.add(types.InlineKeyboardButton(text='⭐️ Купить PRO подписку', callback_data='buy_pro'))
+            markup.add(types.InlineKeyboardButton(text='⭐️ Купить PRO подписку', callback_data='buy_pro'), types.InlineKeyboardButton(text='🏟 Реклама', callback_data='buy_ads'))
+        else:
+            markup.add(types.InlineKeyboardButton(text='🏟 Реклама', callback_data='buy_ads'))
+        if str(message.from_user.id) in ADMINS:
+            markup.add(types.InlineKeyboardButton(text='📈 Статистика', callback_data='statistics'), types.InlineKeyboardButton(text='💻 Для разработчиков', callback_data='for_developers'))
+        markup.add(types.InlineKeyboardButton(text='👨‍💻 Для пользователей', callback_data='for_users'), types.InlineKeyboardButton(text='👮 Для правообладателей контента', callback_data='for_content_owners'))
+        markup.add(types.InlineKeyboardButton(text='ℹ️ Информация о боте', callback_data='view_bot_info'))
         full_name = ''
         first_name = message.from_user.first_name
         last_name = message.from_user.last_name
@@ -540,6 +545,18 @@ def bot_init(token: str) -> None:
             dictionary_used_in_this_function['id_of_message_with_markup'] = message_id
             await UserState.on_pro.set()
             Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
+        elif call.data == 'buy_ads':
+            await advertisement_cabinet_starter(call)
+        elif call.data == 'statistics':
+            await statistics(call)
+        elif call.data == 'for_developers':
+            await for_developers(call)
+        elif call.data == 'for_users':
+            await for_users(call)
+        elif call.data == 'for_content_owners':
+            await for_content_owners(call)
+        elif call.data == 'view_bot_info':
+            await bot_information(call)
 
     async def check_payment_by_button(call: types.CallbackQuery, type_of_purchase: int) -> None:
         if await check_payment(call.data[6:]):
@@ -700,37 +717,31 @@ def bot_init(token: str) -> None:
                                            parse_mode='markdown')
                 Thread(target=delete_messages, args=(4, message.chat.id, message.message_id, x.message_id, bot_telebot)).start()
 
-    async def advertisement_cabinet_starter(message: types.Message) -> None:
-        Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
-        back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
-        await bot.send_message(message.chat.id, text='🟢', reply_markup=back_to_main_menu_markup)
+    async def advertisement_cabinet_starter(call: types.CallbackQuery) -> None:
+        Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
         await UserState.advertisement_cabinet.set()
-        await advertisement_cabinet(message)
+        await advertisement_cabinet(call)
 
-    async def advertisement_cabinet(message: types.Message) -> None:
-        dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
+    async def advertisement_cabinet(call: types.CallbackQuery) -> None:
+        dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
         markup = types.InlineKeyboardMarkup()
         for button_data in [['➕ Создать объявление', 'create_ads'],
                             ['📥 Управление объявлениями', 'manage_advertisements']]:
             markup.add(types.InlineKeyboardButton(text=button_data[0], callback_data=button_data[1]))
         markup.add(types.InlineKeyboardButton(text='❓ Вопросы и ответы',
                                               url='https://telegra.ph/Kak-rabotaet-reklama-v-ReshenijaBot-i-botah-dvizhka-ReshenijaBot-08-25'))
+        markup.add(types.InlineKeyboardButton(text='⏪ Назад', callback_data='back_to_my_account'))
         advertisements_cabinet_message_text = f'🏟 Рекламный кабинет\n\nℹ️ Здесь вы можете купить показы рекламы вашего канала, бота, сайта и тп в сообщениях ботов движка @ReshenijaBot. "Сообщения ботов движка @ReshenijaBot" - это сам @ReshenijaBot, и все остальные боты, созданныен при помощи его движка. На данный момент в общей сложности в @ReshenijaBot и других ботах его движка *{await get_amount_of_users_in_all_bots()}* пользователей.\n\n👥 Аудитория - *активные* пользователи telegram, подростки, школьники, студенты из стран СНГ.'
-        if isinstance(message, types.Message):
-            chat_id = message.chat.id
-        else:
-            chat_id = message.message.chat.id
         if 'id_of_message_with_markup' in dictionary_used_in_this_function:
             id_of_message = dictionary_used_in_this_function['id_of_message_with_markup']
         else:
             id_of_message = None
-        message_id = await try_edit_or_send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id,
-                                                    chat_id=chat_id, text=advertisements_cabinet_message_text,
+        message_id = await try_edit_or_send_message(user_id=call.from_user.id, bot=bot, bot_id=bot_id,
+                                                    chat_id=call.message.chat.id, text=advertisements_cabinet_message_text,
                                                     message_id=id_of_message, reply_markup=markup,
                                                     parse_mode='markdown')
         dictionary_used_in_this_function['id_of_message_with_markup'] = message_id
-        Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
+        Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.callback_query_handler(lambda call: True, state=UserState.advertisement_cabinet)
     async def advertisement_cabinet_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
@@ -743,6 +754,9 @@ def bot_init(token: str) -> None:
         elif call.data == 'manage_advertisements':
             await UserState.manage_advertisements.set()
             await view_orders(call)
+        elif call.data == 'back_to_my_account':
+            await UserState.my_account.set()
+            await my_account_starter(call)
 
     async def view_orders(call: types.CallbackQuery) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
@@ -1190,18 +1204,11 @@ def bot_init(token: str) -> None:
             except Exception:
                 pass
 
-    async def for_developers(message) -> None:
-        Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
-        back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
-        if isinstance(message, types.Message):
-            chat_id = message.chat.id
-            await bot.send_message(chat_id, text='🟢', reply_markup=back_to_main_menu_markup)
-        else:
-            chat_id = message.message.chat.id
-        dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_id, 2)
+    async def for_developers(call: types.CallbackQuery) -> None:
+        Thread(target=async_functions_process_starter, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
+        dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
         markup = types.InlineKeyboardMarkup()
-        for button_data in [['🏟 Рекламные заказы', 'ads_orders']]:
+        for button_data in [['🏟 Рекламные заказы', 'ads_orders'], ['⏪ Назад', 'back_to_my_account']]:
             markup.add(types.InlineKeyboardButton(text=button_data[0], callback_data=button_data[1]))
         for_developers_message_text = 'Выбери необходимый пункт!'
         await UserState.for_developers.set()
@@ -1209,12 +1216,12 @@ def bot_init(token: str) -> None:
             id_of_message = dictionary_used_in_this_function['id_of_message_with_markup']
         else:
             id_of_message = None
-        message_id = await try_edit_or_send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id,
-                                                    chat_id=chat_id, text=for_developers_message_text,
+        message_id = await try_edit_or_send_message(user_id=call.from_user.id, bot=bot, bot_id=bot_id,
+                                                    chat_id=call.message.chat.id, text=for_developers_message_text,
                                                     message_id=id_of_message,
                                                     reply_markup=markup)
         dictionary_used_in_this_function['id_of_message_with_markup'] = message_id
-        Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
+        Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.callback_query_handler(lambda call: True, state=UserState.for_developers)
     async def for_developers_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
@@ -1286,6 +1293,10 @@ def bot_init(token: str) -> None:
             await view_ads_info(call, True, previous_call_data)
         elif 'pass_moderation_' in call.data or 'reject_moderation_' in call.data:
             await pass_or_reject_moderation(call, True)
+        elif call.data == 'back_to_my_account':
+            await UserState.my_account.set()
+            await my_account_starter(call)
+
 
     @dp.callback_query_handler(lambda call: True, state='*')
     async def all_buttons_handler(call: types.CallbackQuery, state: FSMContext = None) -> None:
@@ -1342,7 +1353,7 @@ def bot_init(token: str) -> None:
                 users_bots = users_data['bots']
             except KeyError:
                 users_bots = {}
-            if call.data in ['my_referrals', 'my_bots', 'add_bot', 'buy_pro'] or call.data in users_bots or \
+            if call.data in ['my_referrals', 'my_bots', 'add_bot', 'buy_pro''buy_ads', 'statistics', 'for_developers', 'for_users', 'for_content_owners', 'view_bot_info'] or call.data in users_bots or \
                     'start' in call.data or 'stop' in call.data or 'delete' in call.data or 'confirm_deletion' in \
                     call.data:
                 await UserState.my_account.set()
@@ -1376,12 +1387,14 @@ def bot_init(token: str) -> None:
                 await buy_pro_buttons_handler(call, state)
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
-    @dp.message_handler(state='*', commands=['statistics'])
-    async def statistics(message: types.message) -> None:
-        await UserState.find_solution.set()
-        await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id, chat_id=message.chat.id,
-                           text=await check_amount_of_users(message, bot_id),
-                           reply_markup=await get_reply_markup_for_user(message.from_user.id))
+    async def statistics(call: types.CallbackQuery) -> None:
+        dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton(text='⏪ Назад', callback_data='back_to_my_account'))
+        await try_edit_or_send_message(user_id=call.from_user.id, bot=bot, bot_id=bot_id, chat_id=call.message.chat.id,
+                           text=await check_amount_of_users(call, bot_id),
+                           message_id=dictionary_used_in_this_function['id_of_message_with_markup'],
+                           reply_markup=markup)
 
     @dp.message_handler(state='*', commands=['my_account'])
     async def my_account(message: types.Message) -> None:
@@ -1391,6 +1404,35 @@ def bot_init(token: str) -> None:
         await bot.send_message(message.chat.id, text='🟢', reply_markup=back_to_main_menu_markup)
         await my_account_starter(message)
         await UserState.my_account.set()
+
+    async def for_users(call: types.CallbackQuery):
+        dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton(text='⏪ Назад', callback_data='back_to_my_account'))
+        await try_edit_or_send_message(user_id=call.from_user.id, bot=bot, bot_id=bot_id, chat_id=call.message.chat.id,
+                                   text=await get_for_users_text(call, bot_id),
+                                   message_id=dictionary_used_in_this_function['id_of_message_with_markup'],
+                                   reply_markup=markup,
+                                   parse_mode='markdown')
+        
+    async def for_content_owners(call: types.CallbackQuery):
+        dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton(text='⏪ Назад', callback_data='back_to_my_account'))
+        await try_edit_or_send_message(user_id=call.from_user.id, bot=bot, bot_id=bot_id, chat_id=call.message.chat.id,
+                                   text=await get_for_content_owners_text(call, bot_id),
+                                   message_id=dictionary_used_in_this_function['id_of_message_with_markup'],
+                                   reply_markup=markup)
+        
+    async def bot_information(call: types.CallbackQuery):
+        dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton(text='⏪ Назад', callback_data='back_to_my_account'))
+        await try_edit_or_send_message(user_id=call.from_user.id, bot=bot, bot_id=bot_id, chat_id=call.message.chat.id,
+                                   text=await get_bot_information_text(call, bot_id),
+                                   message_id=dictionary_used_in_this_function['id_of_message_with_markup'],
+                                   reply_markup=markup,
+                                   parse_mode='markdown')
 
     @dp.message_handler(state='*', commands=['gift'])
     async def gift_pro_starter(message: types.Message) -> None:
@@ -1514,9 +1556,7 @@ def bot_init(token: str) -> None:
                     pass
             except Exception:
                 pass
-            if message.text == '📈 Статистика' or message.text == '/statistics':
-                await statistics(message)
-            elif message.text == '⁉️ Найти решение':
+            if message.text == '⁉️ Найти решение':
                 await find_solution(message, bot_instance)
             elif message.text == '🤖 ИИ Chat GPT' or message.text == '/chat_gpt':
                 await chat_gpt_starter(message, bot_instance)
@@ -1524,15 +1564,6 @@ def bot_init(token: str) -> None:
                 await get_bookmarks(message)
             elif message.text == '👤 Мой аккаунт' or message.text == '/my_account':
                 await my_account(message)
-            elif message.text == 'ℹ️ Информация о боте':
-                await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id, chat_id=message.chat.id,
-                                   text=await bot_information(message, bot_id),
-                                   reply_markup=await get_reply_markup_for_user(message.from_user.id),
-                                   parse_mode='markdown')
-            elif message.text == '🏟 Реклама':
-                await advertisement_cabinet_starter(message)
-            elif message.text == '💻 Для разработчиков' and str(message.from_user.id) in ADMINS:
-                await for_developers(message)
             elif message.text == '↩ Назад в главное меню':
                 await UserState.previous()
                 try:
@@ -1554,15 +1585,6 @@ def bot_init(token: str) -> None:
                 except Exception:
                     pass
                 await start(message, bot_instance)
-            elif message.text == '👮 Для правообладателей контента':
-                await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id, chat_id=message.chat.id,
-                                   text=await for_content_owners(message, bot_id),
-                                   reply_markup=await get_reply_markup_for_user(message.from_user.id))
-            elif message.text == '👨‍💻 Для пользователей':
-                await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id, chat_id=message.chat.id,
-                                   text=await for_users(message, bot_id),
-                                   reply_markup=await get_reply_markup_for_user(message.from_user.id),
-                                   parse_mode='markdown')
             elif message.text:
                 if '/gift' in message.text and str(message.from_user.id) in ADMINS:
                     await gift_pro_starter(message)
@@ -1575,7 +1597,7 @@ def bot_init(token: str) -> None:
                         pass
 
     @dp.message_handler(state='*', content_types=['text'])
-    async def handle_stupid_message(message: types.Message, state: FSMContext) -> None:
+    async def handle_meaningless_message(message: types.Message, state: FSMContext) -> None:
         if message.text == '↩ Назад в главное меню':
             await command_handler(message, state)
         else:

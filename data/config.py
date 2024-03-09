@@ -27,11 +27,8 @@ AMOUNT_OF_REFERRALS_FOR_PRO = 5
 
 async def get_buttons_list_for_user(user_id: int) -> list[str]:
     if str(user_id) in ADMINS:
-        return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт', '📈 Статистика',
-                'ℹ️ Информация о боте', '🏟 Реклама', '💻 Для разработчиков', '👮 Для правообладателей контента',
-                '👨‍💻 Для пользователей']
-    return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт', '📈 Статистика',
-            'ℹ️ Информация о боте', '🏟 Реклама', '👮 Для правообладателей контента', '👨‍💻 Для пользователей']
+        return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт']
+    return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт']
 
 
 async def get_reply_markup_for_user(user_id: int) -> types.ReplyKeyboardMarkup:
@@ -43,10 +40,10 @@ async def get_reply_markup_for_user(user_id: int) -> types.ReplyKeyboardMarkup:
     return markup
 
 
-MAIN_COMMANDS = ['/chat_gpt', '/statistics', '/bookmarks', '/my_account', '/gift', '/unsubscribe']
+MAIN_COMMANDS = ['/chat_gpt', '/bookmarks', '/my_account', '/gift', '/unsubscribe']
 BOT_USERNAME = '@ReshenijaBot'
-BOT_VERSION = '4.5'
-BOT_RELEASE_NAME = 'Maysky'
+BOT_VERSION = '5'
+BOT_RELEASE_NAME = 'Silvercoin'
 BOT_TELEGRAM_CHANNEL_USERNAME = '@ReshenijaBotChannel'
 BOT_TELEGRAM_GROUP_USERNAME = '@ReshenijaBotChat'
 SUPPORT_BOT_USERNAME = '@ReshenijaSupportBot'

@@ -30,8 +30,8 @@ async def get_amount_of_users_in_all_bots() -> int:
     return amount_of_users
 
 
-async def check_amount_of_users(message: types.Message, bot_id: int) -> str:
-    Thread(target=start, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
+async def check_amount_of_users(call: types.CallbackQuery, bot_id: int) -> str:
+    Thread(target=start, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
     conn = sqlite3.connect('./data/databases/users.sqlite3')
     c = conn.cursor()
     try:
@@ -44,8 +44,8 @@ async def check_amount_of_users(message: types.Message, bot_id: int) -> str:
     return f"ℹ️ Общее количество пользователей бота: {await get_amount_of_users_in_all_bots()}, активных за сегодня: {amount_of_daily_users}.\n\n🤖 Количесво пользователей в этом боте: {users_in_this_bot}, активных за сегодня: {daily_users_in_this_bot}."
 
 
-async def for_content_owners(message: types.Message, bot_id: int) -> str:
-    Thread(target=start, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
+async def get_for_content_owners_text(call: types.CallbackQuery, bot_id: int) -> str:
+    Thread(target=start, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
     return 'Изображения обложек учебников, а также выдержки из соответствующих учебных пособий предоставлены ' \
            'исключительно для удобства пользователей. Использование выдержек из учебных пособий в "разумных ' \
            'пределах", и использование изображений обложек учебников допускается в силу положения статьи 1274 ' \
@@ -60,8 +60,8 @@ async def for_content_owners(message: types.Message, bot_id: int) -> str:
            'https://chat.openai.com).'
 
 
-async def for_users(message: types.Message, bot_id: int) -> str:
-    Thread(target=start, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
+async def get_for_users_text(call: types.CallbackQuery, bot_id: int) -> str:
+    Thread(target=start, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
     return f'''❤️ Спасибо, что пользуетесь @ReshenijaBot!
 
 📢 Наш канал: *{BOT_TELEGRAM_CHANNEL_USERNAME}*
@@ -78,8 +78,8 @@ async def for_users(message: types.Message, bot_id: int) -> str:
 '''
 
 
-async def bot_information(message: types.Message, bot_id: int) -> str:
-    Thread(target=start, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
+async def get_bot_information_text(call: types.CallbackQuery, bot_id: int) -> str:
+    Thread(target=start, args=(active_now, [str(call.from_user.id), call.message.chat.id, bot_id])).start()
     return f''' 🤖: Вы используете *{BOT_USERNAME}*
 
 #⃣ : Текущая версия бота - *{BOT_VERSION}*

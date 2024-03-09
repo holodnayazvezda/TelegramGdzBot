@@ -37,7 +37,7 @@ async def write_bot_users(user_id: str, bot_id: str) -> None:
     conn.close()
 
 
-async def get_amount_of_users(bot_id: int) -> (int, int) :
+async def get_amount_of_users(bot_id: int) -> tuple[int, int]:
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()
     users, daily_users = c.execute(f'SELECT COUNT(users), COUNT(daily_users) FROM bot_{bot_id}').fetchone()
