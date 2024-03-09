@@ -24,7 +24,6 @@ from handlers.gdz.starter import find_solution
 from handlers.start.start_handler import start
 from handlers.states.user_state import UserState
 from handlers.gpt.gpt_message_handlers import chat_gpt_messages_handler, chat_gpt_starter, chat_gpt_task_handler
-from handlers.gpt.gpt_callback_handlers import chat_gpt_inline_buttons_handler, get_chat_gpt_version
 from handlers.gpt.gpt_functions import *
 
 # импорты aiogram
@@ -147,14 +146,6 @@ def bot_init(token: str) -> None:
             await get_bookmarks(message)
         else:
             await chat_gpt_task_handler(message, bot_instance)
-
-    @dp.callback_query_handler(state=UserState.chat_gpt_writer)
-    async def gpt_inline_buttons_handler(call: types.CallbackQuery, state: FSMContext) -> None:
-        await chat_gpt_inline_buttons_handler(call, state, bot_instance)
-
-    @dp.callback_query_handler(state=UserState.chat_gpt_worker)
-    async def get_gpt_version(call: types.CallbackQuery, state: FSMContext) -> None:
-        await get_chat_gpt_version(call, state, bot_instance)
 
     @dp.message_handler(state=[UserState.chat_gpt_worker], content_types=['text'])
     async def gpt_messages_handler(message: types.Message) -> None:
@@ -1383,8 +1374,6 @@ def bot_init(token: str) -> None:
             elif 'pro_' in call.data:
                 await UserState.on_pro.set()
                 await buy_pro_buttons_handler(call, state)
-            elif 'gpt-' in call.data or call.data == 'back_to_model_selection':
-                await get_chat_gpt_version(call, state, bot_instance)
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
 
     @dp.message_handler(state='*', commands=['statistics'])

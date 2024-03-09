@@ -9,7 +9,7 @@ from utils.database.folder_worker import get_dictionary, create_or_dump_user
 from utils.pro.pro_subscription_worker import is_pro
 from utils.chatgpt.requests_counter import get_amount_of_requests_for_user
 from utils.aiogram_functions_worker import send_message, try_edit_or_send_message
-from handlers.gpt.gpt_functions import generate_and_send_answer, clear_chat_gpt_conversation, add_user_to_queue_and_start_generating
+from handlers.gpt.gpt_functions import change_gpt_version, generate_and_send_answer, clear_chat_gpt_conversation, add_user_to_queue_and_start_generating
 from data.config import get_max_tokens_in_response_for_user, ADMINS
 from handlers.states.user_state import UserState
 from handlers.bot import BotInfo
@@ -21,8 +21,10 @@ async def chat_gpt_messages_handler(message: types.Message, bot_instance: BotInf
         await start(message, bot_instance)
     elif message.text == '🗑 Очистить историю диалога':
         await clear_chat_gpt_conversation(message, bot_instance)
+    elif message.text in ['🔁 Переключиться на gpt-4',  '🔁 Переключиться на gpt-3.5-turbo']:
+        await change_gpt_version(message, bot_instance)
     else:
-        await generate_and_send_answer(message.chat.id, message.from_user.id, message.text)
+        await generate_and_send_answer(message.chat.id, message.from_user.id, message.text, bot_instance)
 
 
 async def chat_gpt_starter(message, bot_instance: BotInfo) -> None:
@@ -32,6 +34,10 @@ async def chat_gpt_starter(message, bot_instance: BotInfo) -> None:
         chat_id = message.message.chat.id
     Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), chat_id, bot_instance.bot_id])).start()
     dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_instance.bot_id, 2)
+    try:
+        model = dictionary_used_in_this_function['selected_model']
+    except KeyError:
+        model = 'gpt-3.5-turbo'
     text = '🤖 Привет, я *ИИ Сhat GPT*. Вы можете задавать мне вопросы, а я постараюсь ' \
             'максимально качественно на них ответить. Задавайте вопрос как можно точнее. От этого зависит точность ответа. ' \
             '\n\n✨ Вы можете спросить меня 3 способами:\n1) Отправив *текстовое сообщение*\n2) Отправив ' \
@@ -53,26 +59,23 @@ async def chat_gpt_starter(message, bot_instance: BotInfo) -> None:
     text += f'\n\n🚀 Я поддерживаю две модели:\n1) *gpt-3.5-turbo - *самая популярная и доступная модель в семействе GPT, оптимизирована для чата и отлично справляется с пониманием и генерацией текста. Лимит токенов: {await get_max_tokens_in_response_for_user(has_pro)}.\n2) *gpt-4-bing* - одна из самых совершенных моделей в семействе ChatGPT, способна справляться со сложными и творческими задачами. Имеет *доступ в интернет* и *неограниченный объем* базы знаний. Идеально подойдет для написания сочинений, рефератов, и т.п. Лимит токенов: {await get_max_tokens_in_response_for_user(has_pro)}.\n\n*Лимит токенов* определяет макcимально возможную *длину вашего запроса*. 1 токен примерно равен 3 символам.'
     if has_pro:
         text += '\n\n💎 Поскольку вы являетесь подписчиком ReshenijaBot PRO, лимиты токенов удвоены.'
-    text += '\n\nВыбери необходимую модель Chat GPT и задай свой вопрос!'
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(text='gpt-3.5-turbo', callback_data='gpt-3.5-turbo'))
-    markup.add(types.InlineKeyboardButton(text='gpt-4 (bing ai)', callback_data='gpt-4-bing'))
     if ('id_of_message_with_markup' not in dictionary_used_in_this_function or not
     dictionary_used_in_this_function['id_of_message_with_markup']):
-        back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        back_to_main_menu_markup.add(types.KeyboardButton(text='🗑 Очистить историю диалога'))
-        back_to_main_menu_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
+        chatgpt_main_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        chatgpt_main_markup.add(types.KeyboardButton(text='🗑 Очистить историю диалога'))
+        chatgpt_main_markup.add(types.KeyboardButton(text=f"🔁 Переключиться на {'gpt-4' if model == 'gpt-3.5-turbo' else 'gpt-3.5-turbo'}"))
+        chatgpt_main_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
         await send_message(user_id=message.from_user.id, bot=bot_instance.bot, bot_id=bot_instance.bot_id, chat_id=chat_id, text='🟢',
-                            reply_markup=back_to_main_menu_markup, do_not_add_ads=True)
+                            reply_markup=chatgpt_main_markup, do_not_add_ads=True)
         message_id = await send_message(user_id=message.from_user.id, bot=bot_instance.bot, bot_id=bot_instance.bot_id,
                                         chat_id=chat_id,
-                                        text=text, reply_markup=markup, parse_mode='markdown')
+                                        text=text, parse_mode='markdown')
     else:
         message_id = await try_edit_or_send_message(user_id=message.from_user.id, bot=bot_instance.bot, bot_id=bot_instance.bot_id,
                                                     chat_id=chat_id,
                                                     text=text,
                                                     message_id=dictionary_used_in_this_function[
-                                                        'id_of_message_with_markup'], reply_markup=markup,
+                                                        'id_of_message_with_markup'],
                                                     parse_mode='markdown')
     dictionary_used_in_this_function['id_of_message_with_markup'] = message_id
     Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_instance.bot_id, str(dictionary_used_in_this_function), 2])).start()
@@ -85,6 +88,8 @@ async def chat_gpt_task_handler(message: types.Message, bot_instance: BotInfo) -
         await start(message, bot_instance)
     elif message.text == '🗑 Очистить историю диалога':
         await clear_chat_gpt_conversation(message, bot_instance)
+    elif message.text in ['🔁 Переключиться на gpt-4',  '🔁 Переключиться на gpt-3.5-turbo']:
+        await change_gpt_version(message, bot_instance)
     elif message.text == '/chat_gpt':
         await chat_gpt_starter(message, bot_instance)
     else:
@@ -92,7 +97,6 @@ async def chat_gpt_task_handler(message: types.Message, bot_instance: BotInfo) -
             Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_instance.bot_id, str(dictionary_used_in_this_function), 2])).start()
             await add_user_to_queue_and_start_generating(message, bot_instance)
         except Exception as e:
-            print(e)
             try:
                 await bot_instance.bot.delete_message(message.chat.id, message.message_id)
             except Exception:

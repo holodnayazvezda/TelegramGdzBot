@@ -46,6 +46,7 @@ async def start(message: types.Message, bot_instance: BotInfo) -> None:
                     return
         await UserState.find_solution.set()
         conversation_id = None
+        selected_model = None
         try:
             dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_instance.bot_id, 2)
             if 'id_of_block_of_photos_send_by_bot' in dictionary_used_in_this_function and \
@@ -57,6 +58,8 @@ async def start(message: types.Message, bot_instance: BotInfo) -> None:
                         pass
             if 'chat_gpt_conversation_id' in dictionary_used_in_this_function:
                 conversation_id = dictionary_used_in_this_function['chat_gpt_conversation_id']
+            if 'selected_model' in dictionary_used_in_this_function:
+                selected_model = dictionary_used_in_this_function['selected_model']
             try:
                 await bot_instance.bot.delete_message(message.chat.id, dictionary_used_in_this_function['id_of_message_with_markup'])
             except Exception:
@@ -65,7 +68,7 @@ async def start(message: types.Message, bot_instance: BotInfo) -> None:
             pass
         Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_instance.bot_id,
                                   str({'id_of_block_of_photos_send_by_bot': [], 'id_of_messages_about_bookmarks': [],
-                                       'chat_gpt_conversation_id': conversation_id}), 2])).start()
+                                       'chat_gpt_conversation_id': conversation_id, 'selected_model': selected_model}), 2])).start()
         Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_instance.bot_id])).start()
         try:
             await try_edit_or_send_message(user_id=message.from_user.id, bot=bot_instance.bot, bot_id=bot_instance.bot_id,

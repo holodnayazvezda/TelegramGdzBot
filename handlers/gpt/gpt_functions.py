@@ -2,6 +2,7 @@ from aiogram import types
 
 from telebot.apihelper import ApiTelegramException
 from telebot import TeleBot
+from handlers.states.user_state import UserState
 
 from utils.aiogram_functions_worker import send_message_by_telebot, send_message
 from utils.async_process_runner import start as async_functions_process_starter
@@ -21,6 +22,8 @@ import time
 from threading import Thread
 import os
 import subprocess
+
+from utils.users.users import active_now
 
 # глобальная переменная задачи перебора пользователей
 on_processing_chat_gpt_users = False
@@ -300,6 +303,7 @@ async def process_chat_gpt_users(bot_instance: BotInfo) -> None:
             on_processing_chat_gpt_users = False
             return
 
+
 async def process_chat_gpt_pro_users(bot_instance: BotInfo) -> None:
     global on_processing_chat_gpt_pro_users, chats_ids_and_messages_for_chat_gpt_pro_users
     while True:
@@ -309,3 +313,41 @@ async def process_chat_gpt_pro_users(bot_instance: BotInfo) -> None:
         if len(chats_ids_and_messages_for_chat_gpt_pro_users) == 0:
             on_processing_chat_gpt_pro_users = False
             return
+
+
+async def change_gpt_version(message: types.Message, bot_instance: BotInfo) -> None:
+    Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_instance.bot_id])).start()
+    dictionary_used_in_this_function = await get_dictionary(str(message.from_user.id), bot_instance.bot_id, 2)
+    users_data = await get_dictionary(str(message.from_user.id), bot_instance.bot_id, 1)
+    has_working_bots = await get_has_working_bots(message.from_user.id, bot_instance.bot_id, users_data)
+    amount_of_referrals = await get_amount_of_referrals(message.from_user.id, bot_instance.bot_id, users_data)
+    selected_model = 'gpt-4-bing' if 'gpt-4' in message.text else 'gpt-3.5-turbo'
+    dictionary_used_in_this_function['selected_model'] = selected_model
+    has_pro = await is_pro(message.from_user.id)
+    if selected_model == 'gpt-4-bing':
+        table_name = 'quantity_of_requests_to_gpt4_bing'
+    else:
+        table_name = 'quantity_of_requests_to_gpt3'
+    available_amount_of_requests = await get_available_amount_of_requests_to_chat_gpt(has_pro, selected_model, has_working_bots, amount_of_referrals)
+    amount_of_requests = await get_amount_of_requests_for_user('./data/databases/quantity_of_requests.sqlite3', table_name, message.from_user.id)
+    rest_of_requests = available_amount_of_requests - amount_of_requests
+    message_text = f'✅ Вы переключились на модель: *{selected_model}*.\n\n'
+    if rest_of_requests:
+        message_text += f'⏳ Сегодня вы можете задать ей вопрос еще *{rest_of_requests} раз(а)*.'
+        if has_pro:
+            message_text += f'\n\n💎 Вы являетесь подписчиком ReshenijaBot PRO, поэтому ваш увеличенный лимит для выбранной модели составляет *{available_amount_of_requests}* запросов в день.'
+        else:
+            message_text += f'\n\nℹ️ Ваш лимит для выбранной модели составляет *{available_amount_of_requests}* запросов в день.'
+        await UserState.chat_gpt_writer.set()
+        dictionary_used_in_this_function['text_get_for_chat_gpt'] = True
+    else:
+        message_text += f'❗️ Вы достигли дневного лимита в {available_amount_of_requests} запросов к выбранной модели. Она вновь сможет отвечать на ваши запросы завтра.'
+        if not has_pro:
+            message_text += f'\n\n 💯 Чтобы увеличить лимит до {await get_available_amount_of_requests_to_chat_gpt(True, selected_model, has_working_bots, amount_of_referrals)} запросов в день, подключите PRO подписку в личном кабинете.'
+    chatgpt_main_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    chatgpt_main_markup.add(types.KeyboardButton(text='🗑 Очистить историю диалога'))
+    chatgpt_main_markup.add(types.KeyboardButton(text=f"🔁 Переключиться на {'gpt-4' if selected_model == 'gpt-3.5-turbo' else 'gpt-3.5-turbo'}"))
+    chatgpt_main_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
+    await bot_instance.bot.send_message(chat_id=message.chat.id, text=message_text, reply_markup=chatgpt_main_markup, parse_mode='markdown')
+    Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_instance.bot_id, str(dictionary_used_in_this_function), 2])).start()
+    
