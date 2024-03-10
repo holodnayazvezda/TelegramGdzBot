@@ -18,8 +18,7 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0'
 }
 ADMINS = ['1071845329', '1925785299']
-MAIN_BUTTONS = ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт', '📊 Статистика',
-                'ℹ️ Информация о боте', '🏟 Реклама', '👮 Для правообладателей контента', '👨‍💻 Для пользователей']
+MAIN_BUTTONS = ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Личный кабинет']
 COOKIES_FOR_GPT_4_BING_USERS = {"set-cookie": "MUIDB=372BDD60E86A691C124CC95BE9C068E1; expires=Tue, 01-Apr-2025 21:21:26 GMT; path=/; HttpOnly", "useragentreductionoptout": "A7kgTC5xdZ2WIVGZEfb1hUoNuvjzOZX3VIV/BA6C18kQOOF50Q0D3oWoAm49k3BQImkujKILc7JmPysWk3CSjwUAAACMeyJvcmlnaW4iOiJodHRwczovL3d3dy5iaW5nLmNvbTo0NDMiLCJmZWF0dXJlIjoiU2VuZEZ1bGxVc2VyQWdlbnRBZnRlclJlZHVjdGlvbiIsImV4cGlyeSI6MTY4NDg4NjM5OSwiaXNTdWJkb21haW4iOnRydWUsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="}
 COOKIES_FOR_GPT_4_BING_PRO_USERS = {"set-cookie": "MUIDB=0D594B2AF1A56F192D2F5F11F0C96E55; expires=Tue, 01-Apr-2025 21:19:06 GMT; path=/; HttpOnly", "useragentreductionoptout": "A7kgTC5xdZ2WIVGZEfb1hUoNuvjzOZX3VIV/BA6C18kQOOF50Q0D3oWoAm49k3BQImkujKILc7JmPysWk3CSjwUAAACMeyJvcmlnaW4iOiJodHRwczovL3d3dy5iaW5nLmNvbTo0NDMiLCJmZWF0dXJlIjoiU2VuZEZ1bGxVc2VyQWdlbnRBZnRlclJlZHVjdGlvbiIsImV4cGlyeSI6MTY4NDg4NjM5OSwiaXNTdWJkb21haW4iOnRydWUsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="}
 AMOUNT_OF_REFERRALS_FOR_PRO = 5
@@ -27,8 +26,8 @@ AMOUNT_OF_REFERRALS_FOR_PRO = 5
 
 async def get_buttons_list_for_user(user_id: int) -> list[str]:
     if str(user_id) in ADMINS:
-        return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт']
-    return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Мой аккаунт']
+        return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Личный кабинет']
+    return ['⁉️ Найти решение', '🤖 ИИ Chat GPT', '📌 Закладки', '👤 Личный кабинет']
 
 
 async def get_reply_markup_for_user(user_id: int) -> types.ReplyKeyboardMarkup:

@@ -307,9 +307,9 @@ def bot_init(token: str) -> None:
             max_amount_of_bookmarks_message_text = \
                 f'❗️ Вы достигли максимального количества закладок ({max_amount_of_bookmarks})!'
             if max_amount_of_bookmarks <= 99 - 16 and not has_working_bots:
-                max_amount_of_bookmarks_message_text += f'\n\n_ℹ️ Если вы хотите увеличить максимальное количество закладок с_ *{max_amount_of_bookmarks}* _до_ *{max_amount_of_bookmarks + 15}* _штук, создайте своего бота на основе нашего движка @ReshenijaBot в меню_ *"👤 Мой аккаунт"*_. Вы также можете увеличить максимальное количество закладок путем приглашения пользователей в бота._ *Один приглашенный пользователь = +1 закладка*'
+                max_amount_of_bookmarks_message_text += f'\n\n_ℹ️ Если вы хотите увеличить максимальное количество закладок с_ *{max_amount_of_bookmarks}* _до_ *{max_amount_of_bookmarks + 15}* _штук, создайте своего бота на основе нашего движка @ReshenijaBot в меню_ *"👤 Личный кабинет"*_. Вы также можете увеличить максимальное количество закладок путем приглашения пользователей в бота._ *Один приглашенный пользователь = +1 закладка*'
             elif max_amount_of_bookmarks <= 99 - 15 and not has_working_bots:
-                max_amount_of_bookmarks_message_text += f'\n\n_ℹ️ Если вы хотите увеличить максимальное количество закладок с_ *{max_amount_of_bookmarks}* _до_ *{max_amount_of_bookmarks + 15}* _штук, создайте своего бота на основе нашего движка @ReshenijaBot в меню_ *"👤 Мой аккаунт"*'
+                max_amount_of_bookmarks_message_text += f'\n\n_ℹ️ Если вы хотите увеличить максимальное количество закладок с_ *{max_amount_of_bookmarks}* _до_ *{max_amount_of_bookmarks + 15}* _штук, создайте своего бота на основе нашего движка @ReshenijaBot в меню_ *"👤 Личный кабинет"*'
             elif max_amount_of_bookmarks < 99:
                 max_amount_of_bookmarks_message_text += f'\n\n_ℹ️ Вы также можете увеличить максимальное количество закладок путем приглашения пользователей в бота._ *Один приглашенный пользователь = +1 закладка*'
             message_id = await send_message(user_id=message.from_user.id, bot=bot, bot_id=bot_id,
@@ -1521,7 +1521,9 @@ def bot_init(token: str) -> None:
                 await get_name_of_bookmark(message, state)
         elif 'text_get_for_chat_gpt' in dictionary_to_use_in_this_function and message.text not in await \
                 get_buttons_list_for_user(message.from_user.id) + ['↩ Назад в главное меню',
-                                                                   '🗑 Очистить историю диалога'] + MAIN_COMMANDS:
+                                                                   '🗑 Очистить историю диалога',
+                                                                   '🔁 Переключиться на gpt-4',
+                                                                   '🔁 Переключиться на gpt-3.5-turbo'] + MAIN_COMMANDS:
             if dictionary_to_use_in_this_function['text_get_for_chat_gpt']:
                 await UserState.chat_gpt_writer.set()
                 await chat_gpt_task_handler(message, bot_instance)
@@ -1530,10 +1532,6 @@ def bot_init(token: str) -> None:
                     await message.delete()
                 except Exception:
                     pass
-        elif 'text_get_for_chat_gpt' in dictionary_to_use_in_this_function and message.text not in await \
-                get_buttons_list_for_user(message.from_user.id) + ['↩ Назад в главное меню'] + MAIN_COMMANDS \
-                and message.text == '🗑 Очистить историю диалога':
-            await clear_chat_gpt_conversation(message, bot_instance)
         elif 'on_new_bot_creation' in dictionary_to_use_in_this_function and message.text not in await \
                 get_buttons_list_for_user(message.from_user.id) + ['↩ Назад в главное меню'] + MAIN_COMMANDS:
             if dictionary_to_use_in_this_function['on_new_bot_creation']:
@@ -1562,7 +1560,7 @@ def bot_init(token: str) -> None:
                 await chat_gpt_starter(message, bot_instance)
             elif message.text == '📌 Закладки' or message.text == '/bookmarks':
                 await get_bookmarks(message)
-            elif message.text == '👤 Мой аккаунт' or message.text == '/my_account':
+            elif message.text == '👤 Личный кабинет' or message.text == '/my_account':
                 await my_account(message)
             elif message.text == '↩ Назад в главное меню':
                 await UserState.previous()
@@ -1585,6 +1583,9 @@ def bot_init(token: str) -> None:
                 except Exception:
                     pass
                 await start(message, bot_instance)
+            elif message.text in ['↩ Назад в главное меню', '🗑 Очистить историю диалога',
+                                  '🔁 Переключиться на gpt-4', '🔁 Переключиться на gpt-3.5-turbo']:
+                await chat_gpt_task_handler(message, bot_instance)
             elif message.text:
                 if '/gift' in message.text and str(message.from_user.id) in ADMINS:
                     await gift_pro_starter(message)
