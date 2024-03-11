@@ -39,7 +39,7 @@ async def get_reply_markup_for_user(user_id: int) -> types.ReplyKeyboardMarkup:
     return markup
 
 
-MAIN_COMMANDS = ['/chat_gpt', '/bookmarks', '/my_account', '/gift', '/unsubscribe']
+MAIN_COMMANDS = ['/chat_gpt', '/bookmarks', '/my', '/gift', '/unsubscribe']
 BOT_USERNAME = '@ReshenijaBot'
 BOT_VERSION = '5'
 BOT_RELEASE_NAME = 'Silvercoin'

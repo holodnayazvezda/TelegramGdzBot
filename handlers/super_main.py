@@ -346,7 +346,7 @@ def bot_init(token: str) -> None:
         markup = types.InlineKeyboardMarkup(row_width=2)
         markup.add(types.InlineKeyboardButton(text='🤖 Мои боты', callback_data='my_bots'), types.InlineKeyboardButton(text='👥 Мои рефералы', callback_data='my_referrals'))
         if not has_pro:
-            markup.add(types.InlineKeyboardButton(text='⭐️ Купить PRO подписку', callback_data='buy_pro'), types.InlineKeyboardButton(text='🏟 Реклама', callback_data='buy_ads'))
+            markup.add(types.InlineKeyboardButton(text='⭐️ Купить PRO', callback_data='buy_pro'), types.InlineKeyboardButton(text='🏟 Реклама', callback_data='buy_ads'))
         else:
             markup.add(types.InlineKeyboardButton(text='🏟 Реклама', callback_data='buy_ads'))
         if str(message.from_user.id) in ADMINS:
