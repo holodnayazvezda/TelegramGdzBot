@@ -1396,7 +1396,7 @@ def bot_init(token: str) -> None:
                            message_id=dictionary_used_in_this_function['id_of_message_with_markup'],
                            reply_markup=markup)
 
-    @dp.message_handler(state='*', commands=['my_account'])
+    @dp.message_handler(state='*', commands=['my'])
     async def my_account(message: types.Message) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
         back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -1560,7 +1560,7 @@ def bot_init(token: str) -> None:
                 await chat_gpt_starter(message, bot_instance)
             elif message.text == '📌 Закладки' or message.text == '/bookmarks':
                 await get_bookmarks(message)
-            elif message.text == '👤 Личный кабинет' or message.text == '/my_account':
+            elif message.text == '👤 Личный кабинет' or message.text == '/my':
                 await my_account(message)
             elif message.text == '↩ Назад в главное меню':
                 await UserState.previous()

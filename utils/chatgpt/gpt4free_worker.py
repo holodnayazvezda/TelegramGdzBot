@@ -48,7 +48,8 @@ async def ask_chat_gpt_4(prompt: str, user_id: int) -> tuple:
                                    ["./data/databases/quantity_of_requests.sqlite3",
                                     'quantity_of_requests_to_gpt4_bing', user_id])).start()
         return response_content.replace('Bing', 'ReshenijaBotGpt'), 200
-    except Exception:
+    except Exception as e:
+        print('gpt4 api error ' + str(e))
         response_content, status_code = await ask_chat_gpt_and_return_answer('gpt-3.5-turbo', prompt, user_id)
         if status_code == 200:
             return response_content, status_code

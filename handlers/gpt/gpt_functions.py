@@ -71,6 +71,7 @@ async def generate_and_send_answer(chat_id: int, user_id: int, message_text: str
             model = dictionary_used_in_this_function['selected_model']
         except KeyError:
             model = 'gpt-3.5-turbo'
+        print(model)
         if model == 'gpt-4-bing':
             response = await ask_chat_gpt_4(prompt=message_text, user_id=user_id)
         else:
