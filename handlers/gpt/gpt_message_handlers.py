@@ -63,7 +63,7 @@ async def chat_gpt_starter(message, bot_instance: BotInfo) -> None:
     dictionary_used_in_this_function['id_of_message_with_markup']):
         chatgpt_main_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         chatgpt_main_markup.add(types.KeyboardButton(text='🗑 Очистить историю диалога'))
-        chatgpt_main_markup.add(types.KeyboardButton(text=f"🔁 Переключиться на {'gpt-4' if model == 'gpt-3.5-turbo' else 'gpt-3.5-turbo'}"))
+        chatgpt_main_markup.add(types.KeyboardButton(text=f"🔁 Переключиться на {'gpt-4' if (model == 'gpt-3.5-turbo' or not model) else 'gpt-3.5-turbo'}"))
         chatgpt_main_markup.add(types.KeyboardButton(text='↩ Назад в главное меню'))
         await send_message(user_id=message.from_user.id, bot=bot_instance.bot, bot_id=bot_instance.bot_id, chat_id=chat_id, text='🟢',
                             reply_markup=chatgpt_main_markup, do_not_add_ads=True)

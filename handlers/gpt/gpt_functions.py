@@ -8,6 +8,7 @@ from utils.aiogram_functions_worker import send_message_by_telebot, send_message
 from utils.async_process_runner import start as async_functions_process_starter
 from utils.database.folder_worker import get_dictionary, create_or_dump_user
 from utils.chatgpt.chat_gpt_users_worker import clear_history_of_requests
+from utils.log.logging import log_info
 from utils.pro.pro_subscription_worker import is_pro
 from utils.chatgpt.chat_gpt_users_worker import get_amount_of_referrals, get_has_working_bots
 from utils.chatgpt.chat_gpt_worker import get_amount_of_requests_for_user
@@ -58,7 +59,7 @@ async def unsuccessful_request_to_chatgpt(chat_id: int, user_id: int, message_te
         else:
             raise Exception('The answer is empty')
     except Exception as e:
-        print(f'unsuccessful chat gpt api error! {e}')
+        log_info('gpt_errors.txt', f'unsuccessful chat gpt api error! {e}')
         send_message_by_telebot(user_id=user_id, bot_telebot=bot_instance.bot_telebot, bot_id=bot_instance.bot_id, chat_id=chat_id,
                                 text='🛑 Возникла ошибка при получении ответа! Повторите попытку через несколько минут.')
 
@@ -71,7 +72,7 @@ async def generate_and_send_answer(chat_id: int, user_id: int, message_text: str
             model = dictionary_used_in_this_function['selected_model']
         except KeyError:
             model = 'gpt-3.5-turbo'
-        print(model)
+        log_info('chatgpt_use_history.txt', model)
         if model == 'gpt-4-bing':
             response = await ask_chat_gpt_4(prompt=message_text, user_id=user_id)
         else:

@@ -10,6 +10,7 @@ from utils.async_process_runner import start
 from utils.chatgpt.chat_gpt_users_worker import *
 from utils.chatgpt.chat_gpt_worker import ask_chat_gpt_and_return_answer
 from utils.chatgpt.requests_counter import *
+from utils.log.logging import log_info
 from utils.pro.pro_subscription_worker import is_pro
 
 
@@ -49,7 +50,7 @@ async def ask_chat_gpt_4(prompt: str, user_id: int) -> tuple:
                                     'quantity_of_requests_to_gpt4_bing', user_id])).start()
         return response_content.replace('Bing', 'ReshenijaBotGpt'), 200
     except Exception as e:
-        print('gpt4 api error ' + str(e))
+        log_info('gpt4_errors.txt', 'gpt4 api error ' + str(e))
         response_content, status_code = await ask_chat_gpt_and_return_answer('gpt-3.5-turbo', prompt, user_id)
         if status_code == 200:
             return response_content, status_code
