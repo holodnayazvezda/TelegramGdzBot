@@ -8,6 +8,7 @@ from utils.chatgpt.requests_counter import *
 from utils.chatgpt.chat_gpt_users_worker import *
 from utils.chatgpt.apikeys_worker import start_or_stop_api_key, update_api_keys
 from data.config import get_max_tokens_in_response_for_user
+from utils.log.logging import log_info
 from utils.pro.pro_subscription_worker import is_pro
 from utils.async_process_runner import start
 from utils.chatgpt.apikeys_worker import counter_of_requests
@@ -42,6 +43,7 @@ async def ask_chat_gpt_and_return_answer(model: str, prompt: str, user_id: int, 
                                                                                   table_name, user_id])).start()
         return response_content.replace("\\n", "").strip(), 200
     except Exception as e:
+        log_info('gpt3_errors.txt', 'gpt3 api error ' + str(e))
         if 'gpt-4' in model:
             return await ask_chat_gpt_and_return_answer('gpt-3.5-turbo', prompt, user_id)
         if 'exceeded' in str(e) and 'quota' in str(e) and 'check' in str(e) and 'plan' in str(e):
