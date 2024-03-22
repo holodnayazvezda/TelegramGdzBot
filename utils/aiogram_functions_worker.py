@@ -15,7 +15,7 @@ def cut_the_message_text(message_text):
 
 
 async def try_edit_or_send_message(user_id: int, bot: Bot, bot_id: int, chat_id: int, text: str, message_id: int=None, reply_markup=None,
-                                   parse_mode: str=None, do_not_add_ads: bool=False) -> int:
+                                   parse_mode: str = None, do_not_add_ads: bool = False) -> int:
     ads_data_for_user = await get_ads_for_user(user_id, bot_id, do_not_add_ads)
     if ads_data_for_user:
         if parse_mode:

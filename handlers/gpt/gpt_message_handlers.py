@@ -90,8 +90,6 @@ async def chat_gpt_task_handler(message: types.Message, bot_instance: BotInfo) -
         await clear_chat_gpt_conversation(message, bot_instance)
     elif message.text in ['🔁 Переключиться на gpt-4',  '🔁 Переключиться на gpt-3.5-turbo']:
         await change_gpt_version(message, bot_instance)
-    elif message.text == '/chat_gpt':
-        await chat_gpt_starter(message, bot_instance)
     else:
         try:
             Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_instance.bot_id, str(dictionary_used_in_this_function), 2])).start()

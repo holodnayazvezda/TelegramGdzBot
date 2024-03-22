@@ -130,7 +130,7 @@ def bot_init(token: str) -> None:
 
     # это handler, отвечающий за обработку всех Callback кнопок, связанных с gdz
     @dp.callback_query_handler(lambda call: True, state=UserState.find_solution)
-    async def gdz_inline_buttons_hundler(call: types.CallbackQuery, state: FSMContext = None) -> None:
+    async def gdz_inline_buttons_handler(call: types.CallbackQuery, state: FSMContext = None) -> None:
         if await check_ads_message_buttons_call(call):
             return
         if call.data == 'bookmarks':
@@ -140,23 +140,15 @@ def bot_init(token: str) -> None:
 
     @dp.message_handler(state=[UserState.chat_gpt_writer], content_types=['text', 'voice', 'photo'])
     async def gpt_task_handler(message: types.Message) -> None:
-        if message.text == '/statistics':
-            await statistics(message)
-        elif message.text == '/bookmarks':
-            await get_bookmarks(message)
-        else:
-            await chat_gpt_task_handler(message, bot_instance)
+        await chat_gpt_task_handler(message, bot_instance)
 
     @dp.message_handler(state=[UserState.chat_gpt_worker], content_types=['text'])
     async def gpt_messages_handler(message: types.Message) -> None:
         await chat_gpt_messages_handler(message, bot_instance)
 
-    @dp.message_handler(state='*', commands=['chat_gpt'])
     async def gpt_starter(message) -> None:
         await chat_gpt_starter(message, bot_instance)
 
-    # это функция, отвечающая за открытие закладок
-    @dp.message_handler(state='*', commands=['bookmarks'])
     async def get_bookmarks(message) -> None:
         if isinstance(message, types.Message):
             Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
@@ -1396,7 +1388,6 @@ def bot_init(token: str) -> None:
                            message_id=dictionary_used_in_this_function['id_of_message_with_markup'],
                            reply_markup=markup)
 
-    @dp.message_handler(state='*', commands=['my'])
     async def my_account(message: types.Message) -> None:
         Thread(target=async_functions_process_starter, args=(active_now, [str(message.from_user.id), message.chat.id, bot_id])).start()
         back_to_main_menu_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -1556,11 +1547,11 @@ def bot_init(token: str) -> None:
                 pass
             if message.text == '⁉️ Найти решение':
                 await find_solution(message, bot_instance)
-            elif message.text == '🤖 ИИ Chat GPT' or message.text == '/chat_gpt':
+            elif message.text == '🤖 ИИ Chat GPT':
                 await chat_gpt_starter(message, bot_instance)
-            elif message.text == '📌 Закладки' or message.text == '/bookmarks':
+            elif message.text == '📌 Закладки':
                 await get_bookmarks(message)
-            elif message.text == '👤 Личный кабинет' or message.text == '/my':
+            elif message.text == '👤 Личный кабинет':
                 await my_account(message)
             elif message.text == '↩ Назад в главное меню':
                 await UserState.previous()
