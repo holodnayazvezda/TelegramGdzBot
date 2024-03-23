@@ -78,6 +78,7 @@ async def chat_gpt_starter(message, bot_instance: BotInfo) -> None:
                                                         'id_of_message_with_markup'],
                                                     parse_mode='markdown')
     dictionary_used_in_this_function['id_of_message_with_markup'] = message_id
+    dictionary_used_in_this_function['text_get_for_chat_gpt'] = True
     Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(message.from_user.id), bot_instance.bot_id, str(dictionary_used_in_this_function), 2])).start()
     await UserState.chat_gpt_worker.set()
 

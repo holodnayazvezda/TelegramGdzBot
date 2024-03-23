@@ -43,6 +43,7 @@ async def ask_chat_gpt_and_return_answer(model: str, prompt: str, user_id: int, 
                                                                                   table_name, user_id])).start()
         return response_content.replace("\\n", "").strip(), 200
     except Exception as e:
+        print(e)
         log_info('gpt3_errors.txt', 'gpt3 api error ' + str(e))
         if 'gpt-4' in model:
             return await ask_chat_gpt_and_return_answer('gpt-3.5-turbo', prompt, user_id)

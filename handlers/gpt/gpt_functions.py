@@ -68,11 +68,10 @@ async def generate_and_send_answer(chat_id: int, user_id: int, message_text: str
     bot_instance.bot_telebot.send_chat_action(chat_id=chat_id, action='typing')
     dictionary_used_in_this_function = await get_dictionary(str(user_id), bot_instance.bot_id, 2)
     try:
-        try:
+        model = 'gpt-3.5-turbo'
+        if 'selected_model' in dictionary_used_in_this_function and dictionary_used_in_this_function['selected_model']:
             model = dictionary_used_in_this_function['selected_model']
-        except KeyError:
-            model = 'gpt-3.5-turbo'
-        log_info('chatgpt_use_history.txt', model)
+            log_info('chatgpt_use_history.txt', model)
         if model == 'gpt-4-bing':
             response = await ask_chat_gpt_4(prompt=message_text, user_id=user_id)
         else:
@@ -130,7 +129,7 @@ async def add_user_to_queue_and_start_generating(message: types.Message, bot_ins
                         Thread(target=async_functions_process_starter, args=(process_chat_gpt_pro_users, [bot_instance])).start()
                 else:
                     chats_ids_and_messages_for_chat_gpt_users[message.chat.id] = [message.from_user.id,
-                                                                                    message.text]
+                                                                                  message.text]
                     if on_processing_chat_gpt_users is False:
                         on_processing_chat_gpt_users = True
                         Thread(target=async_functions_process_starter, args=(process_chat_gpt_users, [bot_instance])).start()
@@ -341,7 +340,6 @@ async def change_gpt_version(message: types.Message, bot_instance: BotInfo) -> N
         else:
             message_text += f'\n\nℹ️ Ваш лимит для выбранной модели составляет *{available_amount_of_requests}* запросов в день.'
         await UserState.chat_gpt_writer.set()
-        dictionary_used_in_this_function['text_get_for_chat_gpt'] = True
     else:
         message_text += f'❗️ Вы достигли дневного лимита в {available_amount_of_requests} запросов к выбранной модели. Она вновь сможет отвечать на ваши запросы завтра.'
         if not has_pro:
