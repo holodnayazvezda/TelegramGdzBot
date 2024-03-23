@@ -10,7 +10,7 @@ from telebot import TeleBot
 
 # импорты из других библиотек
 from threading import Thread
-from math import floor
+from math import floor, ceil
 import time
 import redis
 
@@ -32,7 +32,7 @@ def delete_messages_by_timer(delay: float, bot_token: str, message1: types.Messa
 
 
 class ThrottlingMiddleware(BaseMiddleware):
-    def __init__(self, message_limit=2, call_limit=1, message_key_prefix='antiflood_for_messages',
+    def __init__(self, message_limit=1.15, call_limit=1, message_key_prefix='antiflood_for_messages',
                  call_key_prefix='antiflood_for_calls'):
         self.message_limit = message_limit
         self.call_limit = call_limit
@@ -68,7 +68,7 @@ class ThrottlingMiddleware(BaseMiddleware):
             message2 = None
             try:
                 if message.content_type == 'text':
-                    message2 = await message.reply(f"{message.from_user.first_name}, слишком много запросов, повторите через {floor(self.message_limit)} секунду(ы)!")
+                    message2 = await message.reply(f"{message.from_user.first_name}, слишком много запросов, повторите через {ceil(self.message_limit)} секунду(ы)!")
             except Exception:
                 pass
             Thread(target=delete_messages_by_timer, args=(2, message.bot._token, message, message2)).start()
