@@ -12,7 +12,7 @@ async def get_ads_for_user(user_id: int, bot_id: int, return_none: bool) -> tupl
         users_data = await get_dictionary(str(user_id), bot_id, 1)
         paid_ads_data = await get_paid_ads()
         if not paid_ads_data:
-            return None
+            return ()
         try:
             paid_ads_unviewed_by_user = list(filter(lambda el: el not in users_data['watched_ads_ids']
                                                     and paid_ads_data[el][0] != user_id, paid_ads_data))
@@ -25,9 +25,9 @@ async def get_ads_for_user(user_id: int, bot_id: int, return_none: bool) -> tupl
             if paid_ads_data_ids:
                 ads_id = min(paid_ads_data_ids, key=lambda el: users_data['watched_ads_ids'][el])
             else:
-                return None
+                return ()
         return ads_id, paid_ads_data[ads_id]
-    return None
+    return ()
 
 
 async def view_ads_by_user(user_id: int, bot_id: int, ads_id: int) -> None:

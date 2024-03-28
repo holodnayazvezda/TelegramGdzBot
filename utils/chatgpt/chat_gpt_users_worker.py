@@ -1,9 +1,10 @@
-import sqlite3
-
-from json import loads, dumps
 from data.config import (LENGTH_OF_GPT3_HISTORY_FOR_USERS, LENGTH_OF_GPT3_HISTORY_FOR_PRO_USERS,
-                    LENGTH_OF_GPT4_HISTORY_FOR_USERS, LENGTH_OF_GPT4_HISTORY_FOR_PRO_USERS)
+                         LENGTH_OF_GPT4_HISTORY_FOR_USERS, LENGTH_OF_GPT4_HISTORY_FOR_PRO_USERS)
 from utils.database.folder_worker import get_dictionary
+
+import sqlite3
+from json import loads, dumps
+
 
 
 async def add_request_to_history(database_name: str, table_name: str, user_id: int, request_text: str, role: str) -> None:
@@ -32,14 +33,16 @@ async def get_history_of_requests(database_name: str, table_name: str, user_id: 
         if has_pro:
             if len(data) >= LENGTH_OF_GPT3_HISTORY_FOR_PRO_USERS:
                 data = []
-                await clear_history_of_requests("./data/databases/history_of_requests_to_chatgpt.sqlite3", "users_history", user_id)
+                await clear_history_of_requests("./data/databases/history_of_requests_to_chatgpt.sqlite3",
+                                                "users_history", user_id)
             elif 'gpt-4' in model:
                 if len(data) > LENGTH_OF_GPT4_HISTORY_FOR_PRO_USERS:
                     data = data[-LENGTH_OF_GPT4_HISTORY_FOR_USERS:]
         else:
             if len(data) > LENGTH_OF_GPT3_HISTORY_FOR_USERS:
                 data = []
-                await clear_history_of_requests("./data/databases/history_of_requests_to_chatgpt.sqlite3", "users_history", user_id)
+                await clear_history_of_requests("./data/databases/history_of_requests_to_chatgpt.sqlite3",
+                                                "users_history", user_id)
             elif 'gpt-4' in model:
                 if len(data) >= LENGTH_OF_GPT4_HISTORY_FOR_USERS:
                     data = data[-LENGTH_OF_GPT4_HISTORY_FOR_USERS:]

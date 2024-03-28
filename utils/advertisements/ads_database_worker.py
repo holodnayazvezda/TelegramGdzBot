@@ -23,7 +23,8 @@ async def send_ads_on_moderation(ads_id: int, customer_id: int, watches_ordered:
             pass
 
 
-async def create_ads(customer_id: int, customer_chat_id: int, bot_token: str, watches_ordered: int, price: int, text: str) -> int:
+async def create_ads(customer_id: int, customer_chat_id: int, bot_token: str,
+                     watches_ordered: int, price: int, text: str) -> int:
     if str(customer_id) in ADMINS:
         status = 4
     else:
@@ -76,7 +77,7 @@ async def get_next_id_from_database() -> int:
     return next_id
 
 
-async def get_ads_owner_chat_data(ads_id: int) -> int:
+async def get_ads_owner_chat_data(ads_id: int) -> dict:
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     data = c.execute(f'SELECT customer_chat_id, bot_token FROM ads_{ads_id}').fetchone()
@@ -85,12 +86,12 @@ async def get_ads_owner_chat_data(ads_id: int) -> int:
     return {'chat_id': data[0], 'bot_token': data[1]}
 
 
-async def change_ads_status(ads_id: int, new_status: int, sending_data=None, do_not_send_message: bool=False):
+async def change_ads_status(ads_id: int, new_status: int, sending_data=None, do_not_send_message: bool = False):
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
     current_status = c.execute(f'SELECT status FROM ads_{ads_id}').fetchone()[0]
     if current_status >= new_status:
-        raise Exception('Ошибка! Статус не может быть изменне так как ранне этот рекламное объявление уже имело следующий статус')
+        raise Exception('Ошибка! Статус не может быть изменен так как ранне этот рекламное объявление уже имело следующий статус')
     else:
         c.execute(f'UPDATE ads_{ads_id} SET status=?', (new_status,))
     conn.commit()
@@ -98,7 +99,8 @@ async def change_ads_status(ads_id: int, new_status: int, sending_data=None, do_
     conn.close()
     if new_status == 2:
         markup = types.InlineKeyboardMarkup()
-        markup.add(*[types.InlineKeyboardButton(text='📁 Открыть объявление', callback_data=f'ads_{ads_id}'), types.InlineKeyboardButton(text='➕ Создать новое объявление', callback_data='create_ads')])
+        markup.add(*[types.InlineKeyboardButton(text='📁 Открыть объявление', callback_data=f'ads_{ads_id}'),
+                     types.InlineKeyboardButton(text='➕ Создать новое объявление', callback_data='create_ads')])
         data_to_send = await get_ads_owner_chat_data(ads_id)
         bot = TeleBot(token=data_to_send['bot_token'], parse_mode=None)
         message_text = f'❌ К сожалению объявление *№{ads_id}* не прошло модерацию.\n\nВозможные причины:\n-Некорректное описание или содержит ошибки.\n-Указание более одного @username или более одной ссылки.\n- Несуществующий @username или несуществующая ссылка.\n- Нарушает наши условия (ставки, сомнительные проекты).\n- Приватный канал.'
@@ -121,7 +123,7 @@ async def change_ads_status(ads_id: int, new_status: int, sending_data=None, do_
             pass
     elif new_status == 4 or new_status == 5 and not do_not_send_message:
         customer_data = await get_ads_data(ads_id)
-        users_data = await get_dictionary(str(customer_data['customer_id']), None, 1)
+        users_data = await get_dictionary(str(customer_data['customer_id']), 0, 1)
         markup = types.InlineKeyboardMarkup()
         markup.add(*[types.InlineKeyboardButton(text='👌 Хорошо', callback_data='delete_this_message'),
                      types.InlineKeyboardButton(text='📁 Открыть объявление', callback_data=f'ads_{ads_id}')])
@@ -134,7 +136,8 @@ async def change_ads_status(ads_id: int, new_status: int, sending_data=None, do_
         if 'id_of_ads_paid_message' in users_data:
             id_of_ads_paid_message = users_data['id_of_ads_paid_message']
             del users_data['id_of_ads_paid_message']
-            Thread(target=start, args=(create_or_dump_user, [str(customer_data['customer_id']), None, str(users_data), 1])).start()
+            Thread(target=start, args=(create_or_dump_user, [str(customer_data['customer_id']), None, str(users_data),
+                                                             1])).start()
         try:
             if id_of_ads_paid_message:
                 try:
@@ -158,7 +161,8 @@ async def change_ads_status(ads_id: int, new_status: int, sending_data=None, do_
 async def get_paid_ads() -> dict:
     conn = sqlite3.connect('./data/databases/advertisements.sqlite3')
     c = conn.cursor()
-    ads_tables_names = list(map(lambda el: el[0], c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()))
+    ads_tables_names = list(map(lambda el: el[0],
+                                c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()))
     paid_ads_data = {}
     for ads_table_name in ads_tables_names:
         data = c.execute(f'SELECT * FROM {ads_table_name} WHERE status = 4').fetchone()

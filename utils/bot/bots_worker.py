@@ -3,7 +3,7 @@ import sqlite3
 
 
 # непосредственно данные бота
-async def update_or_create_bot_data(bot_token: str, bot_dict: dict, user_id: int):
+async def update_or_create_bot_data(bot_token: str, bot_dict: str, user_id: int):
     bot_id = bot_token.split(':')[0]
     conn = sqlite3.connect('./data/databases/bots.sqlite3')
     c = conn.cursor()

@@ -10,17 +10,17 @@ async def string_validator(string: str) -> str:
 
 
 async def encoded_image_and_links_validator(image_list: list) -> list:
-    itog_list = []
+    final_list = []
     for i in range(len(image_list)):
         if 'https:' not in image_list[i] and 'megaresheba.ru/attachments' not in image_list[i]:
             if i == 0:
                 return image_list
-            itog_list.append(image_list[i])
+            final_list.append(image_list[i])
             break
     for image in image_list:
         if image.startswith('https://megaresheba.ru/attachments'):
-            itog_list.append(image)
-    return itog_list
+            final_list.append(image)
+    return final_list
 
 
 def contains_only_allowed_chars(input_string: str) -> bool:

@@ -30,13 +30,16 @@ async def get_solution_by_link_at_number(link_at_number: str) -> dict:
                     pass
                 if not isinstance(task, str):
                     task = None
-                solution_list_text_tags = list(map(lambda tag: tag.name, soup.find('div', class_='taskText').find_all(name=True)))
+                solution_list_text_tags = list(map(lambda tag: tag.name, soup.find('div', class_='taskText')
+                                                   .find_all(name=True)))
                 solution_list_tags = []
                 added_tags = []
                 for tag_name in solution_list_text_tags:
                     if tag_name not in added_tags:
                         added_tags.append(tag_name)
-                        text = list(filter(lambda el: el, list(map(lambda el: el.getText(), soup.find('div', class_='taskText').find_all(tag_name)))))
+                        text = list(filter(lambda el: el, list(map(lambda el: el.getText(),
+                                                                   soup.find('div', class_='taskText')
+                                                                   .find_all(tag_name)))))
                         if text:
                             solution_list_tags += text
                 return {'type': 2, 'data': '\n'.join(solution_list_tags), 'task': task}

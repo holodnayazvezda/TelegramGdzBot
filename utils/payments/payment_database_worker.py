@@ -1,7 +1,8 @@
 import sqlite3
 
 
-async def add_payment(order_id: str, customer_id: int, customer_chat_id: int, bot_token: str, purchase_type: int=1) -> None:
+async def add_payment(order_id: str, customer_id: int, customer_chat_id: int, bot_token: str,
+                      purchase_type: int = 1) -> None:
     conn = sqlite3.connect('./data/databases/payments.sqlite3')
     c = conn.cursor()
     table_name = 'ads_payments' if purchase_type == 1 else 'premium_payments'

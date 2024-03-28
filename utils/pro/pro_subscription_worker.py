@@ -28,10 +28,10 @@ async def is_pro(user_id: int) -> bool:
 
 async def set_pro_for_user(user_id: int, months: int, chat_id: int, bot_token: str) -> None:
     if not await is_pro(user_id):
-        users_data = await get_dictionary(str(user_id), None, 1)
+        users_data = await get_dictionary(str(user_id), 0, 1)
         if 'have_had_pro' not in users_data:
             users_data['have_had_pro'] = True
-            await create_or_dump_user(str(user_id), None, str(users_data), 1)
+            await create_or_dump_user(str(user_id), 0, str(users_data), 1)
         conn = sqlite3.connect('./data/databases/pro_users.sqlite3')
         c = conn.cursor()
         date_now = dt.datetime.now()
@@ -54,14 +54,14 @@ async def set_pro_for_user(user_id: int, months: int, chat_id: int, bot_token: s
         if 'id_of_pay_premium_message' in users_data:
             id_of_pay_premium_message = users_data['id_of_pay_premium_message']
             del users_data['id_of_pay_premium_message']
-            await create_or_dump_user(str(user_id), None, str(users_data), 1)
+            await create_or_dump_user(str(user_id), 0, str(users_data), 1)
         pro_subscription_was_bought_message_text = f'💎 Поздравляем с приобретением подписки ReshenijaBot PRO на *{months_text}*. Теперь *реклама отключена*, и вам *доступны эксклюзивные функции*!'
         try:
             if id_of_pay_premium_message:
                 try:
                     new_markup = types.InlineKeyboardMarkup()
                     new_markup.add(types.InlineKeyboardButton(text='👌 Хорошо',
-                                                          callback_data='delete_this_message_and_go_to_my_account'))
+                                                              callback_data='delete_this_message_and_go_to_my_account'))
                     bot.edit_message_text(chat_id=chat_id, message_id=id_of_pay_premium_message,
                                           text=pro_subscription_was_bought_message_text, reply_markup=new_markup,
                                           parse_mode='markdown')
@@ -79,7 +79,8 @@ async def unsubscribe_users_from_pro(date_now: str) -> None:
     conn = sqlite3.connect('./data/databases/pro_users.sqlite3')
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS pro_users_data (id INTEGER, creation_date TEXT, months INTEGER, expired_date TEXT, chat_id INTEGER, bot_token TEXT)')
-    users_datas = c.execute('SELECT chat_id, bot_token FROM pro_users_data WHERE expired_date<=?', (date_now,)).fetchall()
+    users_datas = c.execute('SELECT chat_id, bot_token FROM pro_users_data WHERE expired_date<=?',
+                            (date_now,)).fetchall()
     c.execute('DELETE FROM pro_users_data WHERE expired_date<=?', (date_now,))
     conn.commit()
     c.close()

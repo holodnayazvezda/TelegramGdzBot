@@ -1,4 +1,5 @@
 import requests
+
 from data.config import OCR_SPACE_API_KEYS
 import data.config
 from utils.chatgpt.requests_counter import *

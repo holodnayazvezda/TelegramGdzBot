@@ -9,7 +9,8 @@ for table_name in tables:
         data = cur.execute(f"SELECT data FROM {table_name}").fetchone()[0]
         cur.execute(f'DROP TABLE {table_name}')
         cur.execute(f'CREATE TABLE {table_name} (data TEXT, data_5513797718 TEXT)')
-        cur.execute(f'INSERT INTO {table_name} (data, data_5513797718) VALUES (?, ?)', (str({'bookmarks': {}, 'bots': {}}), data))
+        cur.execute(f'INSERT INTO {table_name} (data, data_5513797718) VALUES (?, ?)',
+                    (str({'bookmarks': {}, 'bots': {}}), data))
         print(table_name)
 conn.commit()
 cur.close()

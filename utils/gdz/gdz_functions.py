@@ -8,30 +8,32 @@ from math import ceil
 
 
 # это функция, отвечающая за формирование валидного словаря всех номеров
-async def producer(spisok, call, bot_id: int) -> dict:
-    if not isinstance(spisok, dict):
-        return spisok
+async def producer(data_list, call, bot_id: int) -> dict:
+    if not isinstance(data_list, dict):
+        return data_list
     dictionary_used_in_this_function = await get_dictionary(str(call.from_user.id), bot_id, 2)
     if dictionary_used_in_this_function:
-        dictionary_used_in_this_function['spisok_all_numbers'] = spisok
-        Thread(target=async_functions_process_starter, args=(create_or_dump_user, [str(call.from_user.id), bot_id, str(dictionary_used_in_this_function), 2])).start()
+        dictionary_used_in_this_function['spisok_all_numbers'] = data_list
+        Thread(target=async_functions_process_starter, args=(create_or_dump_user,
+                                                             [str(call.from_user.id), bot_id,
+                                                              str(dictionary_used_in_this_function), 2])).start()
         main_dict = {}
-        amount_of_buttons = ceil(len(spisok) / 98)
-        keys = list(spisok.keys())
+        amount_of_buttons = ceil(len(data_list) / 98)
+        keys = list(data_list.keys())
         for i in range(amount_of_buttons):
             pre_main_dict = {}
             count = 0
             for number in keys:
                 count += 1
                 if count <= 98:
-                    pre_main_dict[number] = spisok[number]
+                    pre_main_dict[number] = data_list[number]
                 else:
                     keys = keys[count - 1:]
                     break
             title = list(pre_main_dict.keys())[0] + '-' + list(pre_main_dict.keys())[-1]
             main_dict[title] = pre_main_dict
         if len(main_dict) == 1:
-            return spisok
+            return data_list
         return main_dict
     
 

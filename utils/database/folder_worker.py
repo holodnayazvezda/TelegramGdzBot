@@ -52,4 +52,4 @@ async def get_dictionary(id_of_user: str, bot_id: int, type_of_dict: int) -> dic
             await create_or_dump_user(id_of_user, bot_id, str({'bookmarks': {}, 'bots': {}}), 1)
             await get_dictionary(id_of_user, bot_id, type_of_dict)
     else:
-        return 0
+        return {}

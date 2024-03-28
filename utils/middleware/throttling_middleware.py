@@ -1,14 +1,11 @@
-# импорты aiogram
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.handler import CancelHandler, current_handler
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.exceptions import Throttled
 
-# импорты telebot
 from telebot import TeleBot
 
-# импорты из других библиотек
 from threading import Thread
 from math import floor, ceil
 import time
@@ -17,7 +14,8 @@ import redis
 client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 
-def delete_messages_by_timer(delay: float, bot_token: str, message1: types.Message, message2: types.Message = None) -> None:
+def delete_messages_by_timer(delay: float, bot_token: str, message1: types.Message,
+                             message2: types.Message = None) -> None:
     time.sleep(delay)
     bot_telebot = TeleBot(token=bot_token)
     if message2:

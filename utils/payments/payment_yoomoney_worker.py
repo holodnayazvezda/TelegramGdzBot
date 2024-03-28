@@ -1,4 +1,5 @@
 from data.config import PAYMENTS_YOOMONEY_TOKEN
+
 from yoomoney import Client, Quickpay
 
 
